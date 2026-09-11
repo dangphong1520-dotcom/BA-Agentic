@@ -1,4 +1,4 @@
-﻿# ADR-001 — Use Modular Monolith for MVP
+# ADR-001 — Use Modular Monolith for MVP
 
 ## Status
 
@@ -98,3 +98,33 @@ Reconsider microservices only when concrete evidence exists, such as:
 - reliability requirements demanding separate services
 
 Do not introduce microservices only because the product is expected to grow.
+
+---
+
+## Alternatives and Scope Clarification
+
+| Alternative | Assessment for the MVP |
+| --- | --- |
+| Modular monolith with background Worker | Selected: centralized domain ownership with asynchronous execution |
+| Microservices per domain | Deferred: deployment and distributed consistency costs precede demonstrated need |
+| All processing inside API requests | Not selected for long-running ingestion/AI work because requests would depend on task completion |
+
+Separate Web, API, and Worker processes do not imply independent domain microservices. The API owns domain/application boundaries; Worker tools invoke governed application services. No cross-module repository access or duplicate Worker business rules are permitted.
+
+PostgreSQL/Prisma, Redis/BullMQ, and object storage are planned components, not proof of installed services. This ADR preserves the existing Accepted modular-monolith decision; it does not approve a specific hosting provider, authentication product, or Worker-to-service transport.
+
+## Implementation Consequences
+
+- Introduce modules with the selected MVP feature slice, not one module for every future entity immediately.
+- Keep model-provider types behind the LLM Gateway and shared contracts free of persistence dependencies.
+- Use transactional domain changes and explicit expected versions for human proposal acceptance.
+- Define recoverable dispatch and idempotent execution before relying on background jobs; the outbox remains a future implementation option.
+- Preserve API/Worker permission checks and source lineage despite separate process boundaries.
+
+Review extraction into a service only with measured operational or team-boundary evidence. Record any new decision in a subsequent ADR rather than rewriting the history of this decision.
+
+## Related Documents
+
+- [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md)
+- [Domain Model](../architecture/DOMAIN_MODEL.md)
+- [AI Agent Architecture](../architecture/AI_AGENT_ARCHITECTURE.md)

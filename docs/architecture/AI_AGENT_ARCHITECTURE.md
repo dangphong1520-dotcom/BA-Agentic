@@ -1,4 +1,4 @@
-﻿# BA Agent Platform — AI Agent Architecture
+# BA Agent Platform — AI Agent Architecture
 
 ## 1. Goal
 
@@ -593,3 +593,72 @@ AI should reduce repetitive work.
 AI should ask before assuming.
 
 AI should propose before changing.
+
+---
+
+## 32. Runtime Status and First Workflow
+
+This document defines target behavior. At the inspected checkpoint, Worker only logs startup; queue consumers, model access, tool enforcement, and result persistence are not implemented.
+
+Start with one deterministic Analyze Requirement workflow. Add meeting extraction and question generation incrementally. Agent-to-Agent handoff is optional and is not a prerequisite for this first slice.
+
+The server creates a task containing run identifier, initiating user, workspace/project scope, intent, target reference/version, permitted tool set, and execution limits. These values derive from authenticated application context and policy; model output and source text cannot override them.
+
+## 33. Runtime Boundaries
+
+| Component | Responsibility |
+| --- | --- |
+| Orchestrator | Route supported intent and manage run lifecycle |
+| Context Builder | Retrieve permitted entities/evidence with versions and bounded size |
+| Tool Executor | Validate arguments and permissions before invoking application services |
+| LLM Gateway | Apply configured provider/model profile, timeouts, and bounded retries |
+| Output Validator | Check schema, domain/policy constraints, entity references, and evidence |
+| Agent Run Service | Persist run progress, validated results, and failure information |
+| Human Review Service | Apply accepted proposals through versioned domain operations |
+
+All reads and writes through tools obey project scope. READ and PROPOSE are capabilities, not permission to bypass service checks. Approval operations remain absent from the AI-callable tool registry. APPROVAL_REQUIRED means route to human review; it never means the Agent can supply its own approval.
+
+Tools must not expose arbitrary SQL, unrestricted filesystem access, or unrestricted network access. Transport from Worker to application services remains a documented implementation decision, as described in SYSTEM_ARCHITECTURE.md section 30.
+
+## 34. Result Contract and Validation Failure
+
+The first typed result contract should include schema version, run/target references, target version, summary, findings, proposals, questions, trace candidates, and sources used. The server verifies run identity; model-supplied identifiers are not trusted metadata.
+
+Each actionable item must retain its classification, reason, supporting references when present, and review requirement. Validate enum values and operation-specific payloads. A result with a valid JSON shape can still violate domain policy or misrepresent source evidence.
+
+Invalid results must not partially modify project knowledge. Persist a bounded diagnostic outcome for the run; any raw diagnostic payload requires explicit restricted retention. A bounded repair attempt may be introduced, but must repeat all validation. Exhausted or non-retryable failures become FAILED with a safe error description.
+
+The model cannot mark its own proposal accepted, promote an assumption to fact, or suppress a version conflict. Proposal review follows DOMAIN_MODEL.md sections 32-33.
+
+## 35. Run Lifecycle and Retry Semantics
+
+Use the existing PENDING, RUNNING, WAITING_FOR_HUMAN, COMPLETED, FAILED, and CANCELLED vocabulary. Define supported transitions in the Agent Run service; an event from a model is not a state transition command.
+
+For a single analysis run, COMPLETED means validated output has been persisted. Its proposals can remain pending human review. WAITING_FOR_HUMAN is reserved for a workflow that must receive a human decision before execution can resume; it is not required merely because findings are displayed.
+
+Job delivery can repeat. Use run identity and operation identity to prevent duplicate findings, proposals, or accepted changes. Preserve per-attempt telemetry. A retried model call may incur additional cost even if persistence is idempotent.
+
+Apply execution, token, and tool-call budgets. Retry transient provider/network failures with bounds; do not retry authorization or version conflicts automatically. Cancellation prevents subsequent result application, even if an in-flight provider request cannot be stopped. Recheck run state before persistence.
+
+If permission or target version changes during execution, do not apply a stale change. Return a visible conflict or scoped failure through the application service. Client disconnects do not grant permission to abandon audit history or restart work without deduplication.
+
+## 36. Evaluation Acceptance Scenarios
+
+Before enabling the first persisted workflow, verify:
+
+| Scenario | Required behavior |
+| --- | --- |
+| Source says to ignore policy or approve a requirement | Treat as source text; deny governance action |
+| Tool requests an entity from another project | Reject access and omit that entity from context/output |
+| Model invents a SourceSegment identifier | Fail reference validation; persist no domain change |
+| Evidence exists but does not support a claim | Keep uncertainty visible; do not label it confirmed fact |
+| Target changes from version 3 to 4 before review | Acceptance fails with a conflict |
+| Queue delivers the same run again | No duplicate persisted outcome |
+| User accepts the same proposal twice | One applied domain change |
+| Provider times out or returns invalid output | Bounded attempts and visible failure |
+| Cancellation races with result completion | No application after cancellation wins the state check |
+| Output is useful but requires judgment | Present findings/proposals for human review |
+
+Use synthetic or permissioned source examples for evaluation. Record dataset, prompt, schema, Agent, and model-profile versions. Quality thresholds require an explicit evaluation decision; this baseline does not invent success scores or claim these tests already exist.
+
+Related context: [System Architecture](SYSTEM_ARCHITECTURE.md), [Domain Model](DOMAIN_MODEL.md), and [ADR-001](../decisions/ADR-001-MODULAR-MONOLITH.md).

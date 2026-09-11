@@ -1,4 +1,4 @@
-﻿# BA Agent Platform — Domain Model
+# BA Agent Platform — Domain Model
 
 ## 1. Domain Philosophy
 
@@ -605,3 +605,58 @@ Important BA knowledge should remain explicitly modeled so that the platform can
 - version it
 - reason about it
 - apply permissions to it
+
+---
+
+## 30. Model Status and Identity
+
+This is a target conceptual model, not an implemented Prisma schema. Fields and statuses labelled potential or possible are design candidates. Final contracts must be introduced with the corresponding implementation slice.
+
+User identifies a human account. WorkspaceMember relates a User to a Workspace and its granted access. Membership does not implicitly grant access to every project; application services enforce project access. Stakeholders may be business contacts without a login account.
+
+Every project-owned entity must have a stable identifier and an unambiguous project/workspace scope, directly or through enforced parent relationships. Resolve and validate that scope server-side. Display codes are not authorization identifiers. Define code uniqueness within a project when implementing persistence.
+
+## 31. Core Relationships
+
+| Parent or source | Relationship | Child or target |
+| --- | --- | --- |
+| Workspace | Has many | WorkspaceMember and Project |
+| User | May have many | WorkspaceMember |
+| Project | Owns many | Source, Requirement, BusinessRule, Decision, Question, AgentRun |
+| Source | Contains many | SourceSegment |
+| Requirement | Has many | AcceptanceCriteria and RequirementVersion |
+| AgentRun | Produces zero or more | AgentFinding and AI Proposal |
+| AI Proposal | Refers to | Target entity and expected version; source AgentRun |
+| TraceLink | Connects | Two typed, scoped entity references |
+
+Relationships describe ownership and references; they do not automatically create confirmed trace links. A meeting transcript is a Source associated with the Meeting, with precise SourceSegments for evidence. Reprocessing must preserve references used by existing findings and approved knowledge.
+
+## 32. Lifecycle and Review Invariants
+
+The status list in section 11 is vocabulary, not a transition graph. Do not infer that adjacent statuses are always reachable. Implement an explicit transition policy and tests for each supported operation; unsupported transitions fail closed. AI-created requirements begin as DRAFT.
+
+Only an authorized human can approve, baseline, or release knowledge. Analysis readiness and confidence never confer approval. Changes to approved or baselined content must preserve historical versions and go through the governed change workflow; exact reopening transitions remain to be specified before implementation.
+
+AI Proposal belongs in the first MVP slice that supports persisted AI changes, alongside AgentRun and AgentFinding. Store operation, target reference, expected version, proposed content, reason, evidence, originating run, and review metadata. The backend assigns reviewer identity and review time.
+
+For section 24, EDITED represents a human-modified proposal still awaiting acceptance; it is not an applied domain change. Only successful acceptance after policy, evidence, and version checks applies a change. Rejecting a proposal leaves the target unchanged. A stale proposal stays unapplied and returns a conflict; do not invent a new status silently.
+
+Acceptance checks the expected version and atomically records the permitted entity change, resulting version, and proposal review. Repeating the same acceptance must not apply it again. Accepting a proposal does not approve the resulting requirement.
+
+## 33. Evidence and TraceLink Integrity
+
+An evidence reference identifies a SourceSegment and the stable source revision it describes. If a statement has no supporting evidence, preserve its uncertainty classification instead of inventing a reference. Reference existence alone does not demonstrate that the source supports the statement.
+
+TraceLink persistence must record typed endpoints, relationship, project scope, origin, confirmation state, and evidence where applicable. PROPOSED AI links are distinguishable from confirmed links. Confirmation requires an authorized human or a documented deterministic rule; semantic similarity alone is insufficient.
+
+Reject missing endpoints, incompatible relationship/endpoint types, and cross-project links outside an explicitly supported policy. Define relationship direction once in shared contracts; examples such as DERIVED_FROM must not switch direction between clients. Avoid duplicate links and preserve removal/supersession history for approved knowledge.
+
+Requirement type BUSINESS_RULE does not replace the first-class BusinessRule entity. Establish their mapping before supporting that type; do not maintain two independent authoritative copies of the same rule.
+
+## 34. Contract Decisions and Validation
+
+Use one shared FindingType vocabulary from AGENTS.md. The shorter MVP_SCOPE list is a delivery subset. Question categories differ between the conceptual Elicitation Agent and section 17; finalize a shared category mapping before exposing persisted question contracts. Do not turn every example label into a separate enum.
+
+Tests for the first persisted domain slice must cover unauthorized approval, invalid transition, cross-project references, stale proposal acceptance, repeated acceptance, source preservation, and history preservation. These are implementation acceptance criteria, not claims of passing tests today.
+
+Related context: [System Architecture](SYSTEM_ARCHITECTURE.md), [AI Agent Architecture](AI_AGENT_ARCHITECTURE.md), and [MVP Scope](../product/MVP_SCOPE.md).
