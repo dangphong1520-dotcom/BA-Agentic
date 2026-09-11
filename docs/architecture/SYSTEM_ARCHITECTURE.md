@@ -537,7 +537,7 @@ Repository inspection on 2026-09-12 distinguishes the existing scaffold from the
 | Background infrastructure | No queue consumer in the Worker entry point | Redis and BullMQ |
 | AI infrastructure | No Agent Runtime in the inspected source | Scoped tools, Context Builder, LLM Gateway, and output validation |
 
-The API currently listens on PORT, defaulting to 3001. Its bootstrap does not yet configure the target /api/v1 prefix. Endpoint examples, SSE, authentication, storage, and observability in this document describe planned behavior.
+The API listens on PORT, defaulting to 3001, and uses the /api/v1 prefix. GET /api/v1/health reports API process liveness only; it does not verify database, queue, storage, or model-provider readiness. Domain endpoint examples, SSE, authentication, storage, and observability remain planned behavior.
 
 Source references: apps/api/src/main.ts, apps/api/src/app.module.ts, apps/worker/src/index.ts, and the root/application package.json files. Update this status when those implementations change.
 
@@ -630,7 +630,7 @@ Keep provider credentials server-side. Avoid secrets and raw source/prompt conte
 
 This architecture baseline is documentation, not proof that the target services are running.
 
-The root typecheck command uses pnpm -r --if-present typecheck. At this checkpoint only Worker declares that script; API and Web do not. A successful root typecheck therefore does not establish workspace-wide type safety. Worker test and lint scripts are also placeholders. Future implementation checkpoints must run checks that actually cover the changed application and critical domain logic.
+The root typecheck command uses pnpm -r --if-present typecheck. Web, API, and Worker now declare typecheck scripts. Web generates Next.js route types before checking; API includes source and tests. Shared package directories do not yet contain implementation. Worker test and lint scripts remain placeholders. API unit and end-to-end tests run separately; typecheck does not establish runtime or domain correctness.
 
 Use the existing context together:
 
