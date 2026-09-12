@@ -530,14 +530,14 @@ Repository inspection on 2026-09-12 distinguishes the existing scaffold from the
 | Component | Observed implementation | Planned capability |
 | --- | --- | --- |
 | Web | Next.js, React, and TypeScript application scaffold | BA workspaces and contextual AI review |
-| API | NestJS ESM bootstrap, AppModule, AppController, AppService, and a controller test | Domain modules, authorization, persistence, and Agent Run APIs |
+| API | NestJS ESM API with versioned health and Workspace/Project service/repository module | Domain modules, authorization, persistence, and Agent Run APIs |
 | Worker | TypeScript entry point that logs startup | Queue consumers, ingestion, and governed Agent execution |
-| Shared packages | contracts, ui, config, and utils directories; no files returned by file discovery | Shared schemas, DTOs, configuration, and reusable components |
-| Persistence | No database integration in the inspected API or Worker source/dependencies | PostgreSQL, Prisma, and incremental pgvector support |
+| Shared packages | contracts package with strict request schemas and DTOs; ui/config/utils remain empty | Shared schemas, DTOs, configuration, and reusable components |
+| Persistence | PostgreSQL/Prisma Workspace and Project persistence in API; Worker has no database integration | PostgreSQL, Prisma, and incremental pgvector support |
 | Background infrastructure | No queue consumer in the Worker entry point | Redis and BullMQ |
 | AI infrastructure | No Agent Runtime in the inspected source | Scoped tools, Context Builder, LLM Gateway, and output validation |
 
-The API listens on PORT, defaulting to 3001, and uses the /api/v1 prefix. GET /api/v1/health reports API process liveness only; it does not verify database, queue, storage, or model-provider readiness. Domain endpoint examples, SSE, authentication, storage, and observability remain planned behavior.
+The API listens on PORT, defaulting to 3001, and uses the /api/v1 prefix. GET /api/v1/health reports API process liveness only; it does not verify database, queue, storage, or model-provider readiness. Workspace/Project routes and development-only bearer authentication are implemented. Other domain endpoints, production authentication, SSE, object storage, and full observability remain planned.
 
 Source references: apps/api/src/main.ts, apps/api/src/app.module.ts, apps/worker/src/index.ts, and the root/application package.json files. Update this status when those implementations change.
 
@@ -630,7 +630,7 @@ Keep provider credentials server-side. Avoid secrets and raw source/prompt conte
 
 This architecture baseline is documentation, not proof that the target services are running.
 
-The root typecheck command uses pnpm -r --if-present typecheck. Web, API, and Worker now declare typecheck scripts. Web generates Next.js route types before checking; API includes source and tests. Shared package directories do not yet contain implementation. Worker test and lint scripts remain placeholders. API unit and end-to-end tests run separately; typecheck does not establish runtime or domain correctness.
+The root typecheck command uses pnpm -r --if-present typecheck. Web, API, and Worker now declare typecheck scripts. Web generates Next.js route types before checking; API includes source and tests. The contracts package now contains shared schemas and DTOs. Worker test and lint scripts remain placeholders. API unit and end-to-end tests run separately; typecheck does not establish runtime or domain correctness.
 
 Use the existing context together:
 

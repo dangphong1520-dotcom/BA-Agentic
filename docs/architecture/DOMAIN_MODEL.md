@@ -610,7 +610,7 @@ Important BA knowledge should remain explicitly modeled so that the platform can
 
 ## 30. Model Status and Identity
 
-This is a target conceptual model, not an implemented Prisma schema. Fields and statuses labelled potential or possible are design candidates. Final contracts must be introduced with the corresponding implementation slice.
+This document describes the target conceptual model. User, Workspace, WorkspaceMember, Project, and ProjectMember now have a minimal Prisma schema; the remaining knowledge entities are not implemented. Fields and statuses labelled potential or possible are design candidates. Final contracts must be introduced with the corresponding implementation slice.
 
 User identifies a human account. WorkspaceMember relates a User to a Workspace and its granted access. Membership does not implicitly grant access to every project; application services enforce project access. Stakeholders may be business contacts without a login account.
 
