@@ -28,18 +28,20 @@ export type CreateWorkspace = z.infer<typeof createWorkspaceSchema>;
 export type CreateProject = z.infer<typeof createProjectSchema>;
 export type UpdateProject = z.infer<typeof updateProjectSchema>;
 
-export interface WorkspaceDto {
-  id: string;
-  name: string;
-  createdAt: string;
-}
-export interface ProjectDto {
-  id: string;
-  workspaceId: string;
-  name: string;
-  description: string;
-  businessGoal: string;
-  version: number;
-  createdAt: string;
-  updatedAt: string;
-}
+export const workspaceDtoSchema = z.object({
+  id: entityIdSchema,
+  name: nameSchema,
+  createdAt: z.iso.datetime(),
+});
+export const projectDtoSchema = z.object({
+  id: entityIdSchema,
+  workspaceId: entityIdSchema,
+  name: nameSchema,
+  description: descriptionSchema,
+  businessGoal: descriptionSchema,
+  version: z.number().int().positive(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+export type WorkspaceDto = z.infer<typeof workspaceDtoSchema>;
+export type ProjectDto = z.infer<typeof projectDtoSchema>;

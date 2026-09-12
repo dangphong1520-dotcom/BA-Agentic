@@ -81,6 +81,34 @@ workspace query. Secrets and generated Prisma Client are excluded from Git.
 
 ## Remaining work
 
-Workspace/Project UI, production login, membership administration, project archive,
+Production login, membership administration, project archive,
 and Requirement drafts are not implemented in this backend slice. No AI provider,
 queue, or requirement approval capability has been added.
+
+## Workspace and Project UI
+
+The Vietnamese Web interface now lists and creates workspaces and projects, and
+edits project name, business goal, and description. Server Actions validate shared
+contracts and call the API; the Web app never accesses the database directly.
+Loading, empty, validation, connection, and stale-version states are supported.
+Conflicting saves preserve the user's draft and offer the latest version in a
+separate tab. Lists currently inherit the API's 100-record limit.
+
+`db:setup` also creates `apps/web/.env.local` if absent, reusing the API development
+token without printing it or overwriting existing configuration. Run `pnpm dev`
+and open http://127.0.0.1:3000. The Web dev server binds to loopback only.
+This is a single-user development session: all local UI requests use the seeded
+identity. The server-only bridge requires development mode, explicit enablement,
+a local request host, and a local API origin; it refuses production requests.
+Credentials are never included in client components or public environment values.
+Production login remains a separate implementation task.
+
+Web verification: `pnpm --filter web test`, `pnpm --filter web lint`,
+`pnpm --filter web build`, and root `pnpm typecheck`.
+
+Verified on 2026-09-12: all eight Web boundary tests and 16 API tests passed,
+including 15 HTTP tests against PostgreSQL; typecheck, Web lint, and production
+build passed. Browser checks covered workspace/project creation, persisted edits,
+list navigation, blank-name rejection, and two-tab version conflict with draft
+preservation. Temporary browser-test records were removed by their exact IDs.
+The development token was absent from served HTML and built client assets.

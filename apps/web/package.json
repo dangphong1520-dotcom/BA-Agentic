@@ -3,16 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "pnpm --filter @ba/contracts build && next build",
+    "typecheck": "pnpm --filter @ba/contracts build && next typegen && tsc --noEmit --incremental false",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@ba/contracts": "workspace:*",
     "next": "16.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -22,7 +25,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "4.1.11"
   },
   "packageManager": "pnpm@11.17.0"
 }
