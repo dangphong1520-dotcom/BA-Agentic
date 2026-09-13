@@ -1,0 +1,51 @@
+import { z } from "zod";
+
+export const requirementTypeSchema = z.enum([
+  "BUSINESS",
+  "FUNCTIONAL",
+  "NON_FUNCTIONAL",
+]);
+export const requirementPrioritySchema = z.enum([
+  "UNDEFINED",
+  "MUST",
+  "SHOULD",
+  "COULD",
+  "WONT",
+]);
+const text = z.string().trim().max(4000);
+export const requirementFieldsSchema = z.strictObject({
+  title: z.string().trim().min(1).max(120),
+  type: requirementTypeSchema,
+  priority: requirementPrioritySchema,
+  description: text,
+  businessGoal: text,
+  actor: text,
+  preconditions: text,
+  mainFlow: text,
+  exceptionFlow: text,
+  acceptanceCriteria: text,
+  sourceNote: text,
+});
+export const createRequirementSchema = requirementFieldsSchema;
+export const updateRequirementSchema = requirementFieldsSchema.extend({
+  expectedVersion: z.number().int().positive(),
+});
+export const requirementDtoSchema = requirementFieldsSchema.extend({
+  id: z.uuid(),
+  workspaceId: z.uuid(),
+  projectId: z.uuid(),
+  status: z.literal("DRAFT"),
+  version: z.number().int().positive(),
+  createdBy: z.uuid(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+export const requirementVersionSchema = z.object({
+  version: z.number().int().positive(),
+  changedBy: z.uuid(),
+  createdAt: z.iso.datetime(),
+  snapshot: requirementDtoSchema,
+});
+export type CreateRequirement = z.infer<typeof createRequirementSchema>;
+export type UpdateRequirement = z.infer<typeof updateRequirementSchema>;
+export type RequirementDto = z.infer<typeof requirementDtoSchema>;

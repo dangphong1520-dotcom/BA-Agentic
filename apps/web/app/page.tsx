@@ -206,47 +206,59 @@ export default async function Home({
                 </p>
               )}
               {editing && workspace ? (
-                <div className="editor-grid">
-                  <section className="panel">
-                    <ProjectForm
-                      key={
-                        project
-                          ? `${project.id}-${project.version}`
-                          : `new-${workspace.id}`
-                      }
-                      workspaceId={workspace.id}
-                      project={project}
-                    />
-                  </section>
-                  <aside className="editor-note">
-                    <span className="note-star" aria-hidden="true">
-                      ✳
-                    </span>
-                    <h2>
-                      Bối cảnh tốt.
-                      <br />
-                      Phân tích tốt hơn.
-                    </h2>
+                <>
+                  {project && (
                     <p>
-                      Chưa cần có mọi câu trả lời. Bắt đầu bằng điều bạn đã biết
-                      và ghi rõ những điểm cần làm sáng tỏ.
+                      <Link
+                        className="button primary"
+                        href={`/requirements?workspace=${workspace.id}&project=${project.id}`}
+                      >
+                        Yêu cầu nghiệp vụ ↗
+                      </Link>
                     </p>
-                    <div className="note-rule" />
-                    <span className="eyebrow">GỢI Ý CHO BẠN</span>
-                    <ol>
-                      <li>Vấn đề cần giải quyết là gì?</li>
-                      <li>Ai là người hưởng lợi?</li>
-                      <li>Kết quả nào có thể đo lường?</li>
-                    </ol>
-                    {project && (
-                      <div className="project-meta">
-                        Phiên bản {project.version}
+                  )}
+                  <div className="editor-grid">
+                    <section className="panel">
+                      <ProjectForm
+                        key={
+                          project
+                            ? `${project.id}-${project.version}`
+                            : `new-${workspace.id}`
+                        }
+                        workspaceId={workspace.id}
+                        project={project}
+                      />
+                    </section>
+                    <aside className="editor-note">
+                      <span className="note-star" aria-hidden="true">
+                        ✳
+                      </span>
+                      <h2>
+                        Bối cảnh tốt.
                         <br />
-                        Cập nhật {date(project.updatedAt)}
-                      </div>
-                    )}
-                  </aside>
-                </div>
+                        Phân tích tốt hơn.
+                      </h2>
+                      <p>
+                        Chưa cần có mọi câu trả lời. Bắt đầu bằng điều bạn đã
+                        biết và ghi rõ những điểm cần làm sáng tỏ.
+                      </p>
+                      <div className="note-rule" />
+                      <span className="eyebrow">GỢI Ý CHO BẠN</span>
+                      <ol>
+                        <li>Vấn đề cần giải quyết là gì?</li>
+                        <li>Ai là người hưởng lợi?</li>
+                        <li>Kết quả nào có thể đo lường?</li>
+                      </ol>
+                      {project && (
+                        <div className="project-meta">
+                          Phiên bản {project.version}
+                          <br />
+                          Cập nhật {date(project.updatedAt)}
+                        </div>
+                      )}
+                    </aside>
+                  </div>
+                </>
               ) : !workspace ? (
                 <section className="empty-state">
                   <div className="empty-art" aria-hidden="true">

@@ -1,4 +1,41 @@
 @import "tailwindcss";
+
+.requirements-shell {
+  max-width: 1440px;
+  margin: auto;
+}
+.requirement-field {
+  margin-top: 24px;
+}
+.requirement-field label {
+  display: block;
+  margin-bottom: 8px;
+}
+.requirement-field textarea {
+  width: 100%;
+}
+.project-form select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd3ca;
+  border-radius: 8px;
+  background: white;
+  color: #25483d;
+}
+.requirement-history {
+  min-width: 0;
+}
+.requirement-history details {
+  margin: 16px 0;
+  padding: 20px;
+  overflow-wrap: anywhere;
+}
+.requirement-history summary {
+  cursor: pointer;
+}
+.preserve-lines {
+  white-space: pre-wrap;
+}
 :root {
   --background: #f8f9f5;
   --foreground: #263c35;

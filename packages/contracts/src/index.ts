@@ -1,4 +1,5 @@
 import { z } from "zod";
+export * from "./requirements.js";
 
 export const entityIdSchema = z.uuid();
 const nameSchema = z.string().trim().min(1).max(120);

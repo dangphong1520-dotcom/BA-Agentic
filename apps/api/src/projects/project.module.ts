@@ -6,6 +6,7 @@ import { ProjectRepository } from './project.repository.js';
 import { ProjectService } from './project.service.js';
 
 @Module({
+  exports: [ProjectService, DatabaseService, DevelopmentAuthGuard],
   controllers: [ProjectController],
   providers: [
     DatabaseService,

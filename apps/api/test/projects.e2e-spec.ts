@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import type { App } from 'supertest/types.js';
@@ -37,13 +37,20 @@ describe('Workspace and Project persistence', () => {
   }
 
   beforeAll(async () => {
-    const migration = await readFile(
-      new URL(
-        '../prisma/migrations/202609120001_workspace_project/migration.sql',
-        import.meta.url,
-      ),
-      'utf8',
-    );
+    const migrationRoot = new URL('../prisma/migrations/', import.meta.url);
+    const migrationDirectories = (
+      await readdir(migrationRoot, { withFileTypes: true })
+    )
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
+    const migration = (
+      await Promise.all(
+        migrationDirectories.map((name) =>
+          readFile(new URL(`${name}/migration.sql`, migrationRoot), 'utf8'),
+        ),
+      )
+    ).join('\n');
     if (process.env.TEST_DATABASE_URL) {
       const url = new URL(process.env.TEST_DATABASE_URL);
       if (
@@ -292,12 +299,208 @@ describe('Workspace and Project persistence', () => {
 
   it('enforces workspace consistency at the database foreign-key boundary', async () => {
     await expect(
-      app
-        .get(DatabaseService)
-        .db.projectMember.create({
-          data: { workspaceId: foreignWorkspace, projectId, userId: otherId },
-        }),
+      app.get(DatabaseService).db.projectMember.create({
+        data: { workspaceId: foreignWorkspace, projectId, userId: otherId },
+      }),
     ).rejects.toThrow();
+  });
+
+  describe('Requirement drafts', () => {
+    let requirementId: string;
+    const draft = {
+      title: '  Capture request  ',
+      type: 'FUNCTIONAL',
+      priority: 'MUST',
+      description: 'Record a customer request',
+      businessGoal: '',
+      actor: 'BA',
+      preconditions: '',
+      mainFlow: 'Enter and save',
+      exceptionFlow: '',
+      acceptanceCriteria: 'Saved content is visible after reopening',
+      sourceNote: 'Manual test input; not verified evidence',
+    };
+    const base = () =>
+      `/api/v1/workspaces/${workspaceId}/projects/${projectId}/requirements`;
+    const path = () => `${base()}/${requirementId}`;
+    it('requires authentication and rejects invalid or privileged fields', async () => {
+      await api().get(base()).expect(401);
+      for (const fields of [
+        { title: ' ' },
+        { status: 'APPROVED' },
+        { createdBy: otherId },
+        { type: 'BUSINESS_RULE' },
+        { description: 'x'.repeat(4001) },
+      ]) {
+        await api()
+          .post(base())
+          .set('Authorization', auth())
+          .send({ ...draft, ...fields })
+          .expect(400);
+      }
+    });
+    it('creates a draft with server identity and an initial immutable snapshot', async () => {
+      const result = await api()
+        .post(base())
+        .set('Authorization', auth())
+        .send(draft)
+        .expect(201);
+      requirementId = entityIdSchema.parse(result.body.id);
+      expect(result.body).toMatchObject({
+        title: 'Capture request',
+        status: 'DRAFT',
+        version: 1,
+        createdBy: userId,
+        workspaceId,
+        projectId,
+      });
+      const history = await api()
+        .get(`${path()}/versions`)
+        .set('Authorization', auth())
+        .expect(200);
+      expect(history.body).toHaveLength(1);
+      expect(history.body[0]).toMatchObject({
+        version: 1,
+        changedBy: userId,
+        snapshot: { title: 'Capture request', sourceNote: draft.sourceNote },
+      });
+    });
+    it('isolates reads, writes, and history across project and workspace boundaries', async () => {
+      const peer = await app.get(DatabaseService).db.project.create({
+        data: {
+          name: 'Accessible peer',
+          workspaceId,
+          members: { create: { userId } },
+        },
+      });
+      const wrong = `/api/v1/workspaces/${workspaceId}/projects/${peer.id}/requirements/${requirementId}`;
+      await api().get(wrong).set('Authorization', auth()).expect(404);
+      await api()
+        .get(`${wrong}/versions`)
+        .set('Authorization', auth())
+        .expect(404);
+      await api()
+        .patch(wrong)
+        .set('Authorization', auth())
+        .send({ ...draft, expectedVersion: 1 })
+        .expect(404);
+      const privateBase = `/api/v1/workspaces/${foreignWorkspace}/projects/${foreignProject}/requirements`;
+      await api().get(privateBase).set('Authorization', auth()).expect(404);
+      await api()
+        .post(privateBase)
+        .set('Authorization', auth())
+        .send(draft)
+        .expect(404);
+      const peerPrivate = await app
+        .get(DatabaseService)
+        .db.project.findFirstOrThrow({
+          where: { workspaceId, members: { some: { userId: otherId } } },
+        });
+      await api()
+        .get(
+          `/api/v1/workspaces/${workspaceId}/projects/${peerPrivate.id}/requirements`,
+        )
+        .set('Authorization', auth())
+        .expect(404);
+    });
+    it('updates with history and rejects stale edits or status escalation', async () => {
+      const updated = await api()
+        .patch(path())
+        .set('Authorization', auth())
+        .send({ ...draft, title: 'Updated requirement', expectedVersion: 1 })
+        .expect(200);
+      expect(updated.body.version).toBe(2);
+      await api()
+        .patch(path())
+        .set('Authorization', auth())
+        .send({ ...draft, expectedVersion: 1 })
+        .expect(409);
+      await api()
+        .patch(path())
+        .set('Authorization', auth())
+        .send({ ...draft, expectedVersion: 2, status: 'APPROVED' })
+        .expect(400);
+      const history = await api()
+        .get(`${path()}/versions`)
+        .set('Authorization', auth())
+        .expect(200);
+      expect(
+        history.body.map((row: { version: number }) => row.version),
+      ).toEqual([2, 1]);
+      expect(history.body[1].snapshot.title).toBe('Capture request');
+      expect(history.body[0].snapshot.title).toBe('Updated requirement');
+    });
+    it('permits one concurrent save and records exactly one new version', async () => {
+      const results = await Promise.all(
+        ['First', 'Second'].map((title) =>
+          api()
+            .patch(path())
+            .set('Authorization', auth())
+            .send({ ...draft, title, expectedVersion: 2 }),
+        ),
+      );
+      expect(results.map((row) => row.status).sort()).toEqual([200, 409]);
+      const history = await api()
+        .get(`${path()}/versions`)
+        .set('Authorization', auth())
+        .expect(200);
+      expect(
+        history.body.map((row: { version: number }) => row.version),
+      ).toEqual([3, 2, 1]);
+    });
+    it('rolls back content if the version record cannot be written', async () => {
+      const prisma = app.get(DatabaseService).db;
+      const before = await prisma.requirement.findUniqueOrThrow({
+        where: { id: requirementId },
+      });
+      await prisma.requirementVersion.create({
+        data: { requirementId, version: 4, changedBy: userId, snapshot: {} },
+      });
+      try {
+        await api()
+          .patch(path())
+          .set('Authorization', auth())
+          .send({ ...draft, title: 'Must roll back', expectedVersion: 3 })
+          .expect(500);
+        expect(
+          await prisma.requirement.findUniqueOrThrow({
+            where: { id: requirementId },
+          }),
+        ).toEqual(before);
+      } finally {
+        await prisma.requirementVersion.delete({
+          where: { requirementId_version: { requirementId, version: 4 } },
+        });
+      }
+    });
+    it('retains drafts and history after reconnect and enforces database scope', async () => {
+      await app.close();
+      app = await boot();
+      const result = await api()
+        .get(path())
+        .set('Authorization', auth())
+        .expect(200);
+      expect(result.body.version).toBe(3);
+      const rows = await api()
+        .get(base())
+        .set('Authorization', auth())
+        .expect(200);
+      expect(rows.body).toHaveLength(1);
+      await expect(
+        app
+          .get(DatabaseService)
+          .db.requirement.create({
+            data: {
+              ...draft,
+              type: 'FUNCTIONAL',
+              priority: 'MUST',
+              workspaceId: foreignWorkspace,
+              projectId,
+              createdBy: userId,
+            },
+          }),
+      ).rejects.toThrow();
+    });
   });
 
   it('disables development authentication in production', async () => {
