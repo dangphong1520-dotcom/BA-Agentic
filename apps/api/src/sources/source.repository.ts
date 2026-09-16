@@ -89,7 +89,7 @@ export class SourceRepository {
           id: requirementId,
           projectId,
           version,
-          status: 'DRAFT',
+          status: { in: ['DRAFT', 'CLARIFICATION_REQUIRED'] },
           project: { members: { some: { userId } } },
         },
         data: { version, updatedAt: current.updatedAt },

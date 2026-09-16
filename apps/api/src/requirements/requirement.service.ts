@@ -25,6 +25,8 @@ export class RequirementService {
   ) {
     return requirementDtoSchema.parse({
       ...row,
+      approvedAt: row.approvedAt?.toISOString() ?? null,
+      baselinedAt: row.baselinedAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     });
@@ -68,7 +70,9 @@ export class RequirementService {
     id: string,
     data: UpdateRequirement,
   ) {
-    await this.get(user, workspace, project, id);
+    const current = await this.get(user, workspace, project, id);
+    if (!['DRAFT', 'CLARIFICATION_REQUIRED'].includes(current.status))
+      throw new ConflictException('Requirement is no longer editable');
     const row = await this.repository.update(
       user,
       workspace,
@@ -81,5 +85,129 @@ export class RequirementService {
         'Requirement changed or is no longer editable',
       );
     return this.dto(row);
+  }
+
+  private async transition(
+    user: string,
+    workspace: string,
+    project: string,
+    id: string,
+    expectedVersion: number,
+    from: Array<
+      'DRAFT' | 'CLARIFICATION_REQUIRED' | 'READY_FOR_REVIEW' | 'APPROVED'
+    >,
+    to:
+      'CLARIFICATION_REQUIRED' | 'READY_FOR_REVIEW' | 'APPROVED' | 'BASELINED',
+    governance: {
+      approvedBy?: string;
+      approvedAt?: Date;
+      baselinedBy?: string;
+      baselinedAt?: Date;
+    } = {},
+  ) {
+    const current = await this.get(user, workspace, project, id);
+    if (
+      current.version !== expectedVersion ||
+      !from.includes(current.status as (typeof from)[number])
+    )
+      throw new ConflictException(
+        'Requirement changed or transition is invalid',
+      );
+    if (
+      to === 'READY_FOR_REVIEW' &&
+      (!current.description.trim() || !current.acceptanceCriteria.trim())
+    )
+      throw new ConflictException(
+        'Description and acceptance criteria are required for review',
+      );
+    const row = await this.repository.transition(
+      user,
+      workspace,
+      project,
+      id,
+      expectedVersion,
+      from,
+      to,
+      governance,
+    );
+    if (!row)
+      throw new ConflictException(
+        'Requirement changed or transition is invalid',
+      );
+    return this.dto(row);
+  }
+
+  requestClarification(
+    user: string,
+    workspace: string,
+    project: string,
+    id: string,
+    expectedVersion: number,
+  ) {
+    return this.transition(
+      user,
+      workspace,
+      project,
+      id,
+      expectedVersion,
+      ['DRAFT', 'READY_FOR_REVIEW'],
+      'CLARIFICATION_REQUIRED',
+    );
+  }
+
+  readyForReview(
+    user: string,
+    workspace: string,
+    project: string,
+    id: string,
+    expectedVersion: number,
+  ) {
+    return this.transition(
+      user,
+      workspace,
+      project,
+      id,
+      expectedVersion,
+      ['DRAFT', 'CLARIFICATION_REQUIRED'],
+      'READY_FOR_REVIEW',
+    );
+  }
+
+  approve(
+    user: string,
+    workspace: string,
+    project: string,
+    id: string,
+    expectedVersion: number,
+  ) {
+    return this.transition(
+      user,
+      workspace,
+      project,
+      id,
+      expectedVersion,
+      ['READY_FOR_REVIEW'],
+      'APPROVED',
+      { approvedBy: user, approvedAt: new Date() },
+    );
+  }
+
+  baseline(
+    user: string,
+    workspace: string,
+    project: string,
+    id: string,
+    expectedVersion: number,
+  ) {
+    return this.transition(
+      user,
+      workspace,
+      project,
+      id,
+      expectedVersion,
+      ['APPROVED'],
+      'BASELINED',
+      { baselinedBy: user, baselinedAt: new Date() },
+    );
   }
 }

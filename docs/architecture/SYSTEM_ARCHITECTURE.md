@@ -600,6 +600,8 @@ Schema validity alone does not authorize a change. Source references must exist,
 
 AI-created requirements begin as DRAFT. Accepting a content proposal does not automatically approve or baseline the requirement. Governance operations require an authorized human action and backend validation.
 
+The implemented requirement lifecycle uses dedicated commands for clarification, review readiness, approval, and baseline. Review readiness enforces minimum content quality. Approval and baseline identities come from the authenticated server session, and each transition atomically increments the requirement version and stores a full historical snapshot. Approved and baselined content is immutable until a separate governed reopening policy is defined.
+
 ## 32. Versioning, Traceability, and Job Reliability
 
 Target invariants for the first persisted workflow:

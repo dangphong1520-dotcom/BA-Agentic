@@ -637,6 +637,8 @@ The status list in section 11 is vocabulary, not a transition graph. Do not infe
 
 Only an authorized human can approve, baseline, or release knowledge. Analysis readiness and confidence never confer approval. Changes to approved or baselined content must preserve historical versions and go through the governed change workflow; exact reopening transitions remain to be specified before implementation.
 
+Sprint 08 implements the first requirement transition policy: DRAFT and CLARIFICATION_REQUIRED are editable; READY_FOR_REVIEW requires a description and acceptance criteria; explicit human commands advance READY_FOR_REVIEW to APPROVED and APPROVED to BASELINED. Returning READY_FOR_REVIEW to CLARIFICATION_REQUIRED is supported. Each transition increments the version and atomically preserves a complete snapshot. Reopening approved or baselined requirements remains unspecified and therefore unavailable.
+
 AI Proposal belongs in the first MVP slice that supports persisted AI changes, alongside AgentRun and AgentFinding. Store operation, target reference, expected version, proposed content, reason, evidence, originating run, and review metadata. The backend assigns reviewer identity and review time.
 
 For section 24, EDITED represents a human-modified proposal still awaiting acceptance; it is not an applied domain change. Only successful acceptance after policy, evidence, and version checks applies a change. Rejecting a proposal leaves the target unchanged. A stale proposal stays unapplied and returns a conflict; do not invent a new status silently.

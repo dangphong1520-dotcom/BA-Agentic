@@ -7,11 +7,13 @@ export async function RequirementEvidence({
   projectId,
   requirementId,
   version,
+  readOnly = false,
 }: {
   workspaceId: string;
   projectId: string;
   requirementId: string;
   version: number;
+  readOnly?: boolean;
 }) {
   const apiBase = `/workspaces/${workspaceId}/projects/${projectId}`;
   let data;
@@ -50,7 +52,7 @@ export async function RequirementEvidence({
           Quản lý nguồn trong tab mới ↗
         </Link>
       </p>
-      {data.sources.length ? (
+      {!readOnly && data.sources.length ? (
         <EvidenceForm
           workspaceId={workspaceId}
           projectId={projectId}
@@ -58,9 +60,9 @@ export async function RequirementEvidence({
           version={version}
           sources={data.sources}
         />
-      ) : (
+      ) : !readOnly ? (
         <p>Thêm nguồn trong dự án rồi mở lại yêu cầu để chọn đoạn trích.</p>
-      )}
+      ) : null}
       <h3>Các đoạn đã gắn</h3>
       {!data.links.length && (
         <p className="muted">Chưa có đoạn nguồn được gắn.</p>

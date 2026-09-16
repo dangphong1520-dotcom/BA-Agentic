@@ -3,12 +3,14 @@ import {
   createRequirementSchema,
   updateRequirementSchema,
   requirementDtoSchema,
+  requirementTransitionSchema,
   entityIdSchema,
 } from "@ba/contracts";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ApiError, apiRequest } from "@/lib/api";
 export type RequirementFormState = { error?: string; conflict?: boolean };
+export type RequirementTransitionState = { error?: string };
 export async function saveRequirement(
   _previous: RequirementFormState,
   form: FormData,
@@ -72,5 +74,56 @@ export async function saveRequirement(
   revalidatePath("/requirements");
   redirect(
     `/requirements?workspace=${workspace.data}&project=${project.data}&id=${savedId}&saved=1`,
+  );
+}
+
+const transitionEndpoints = {
+  clarification: "request-clarification",
+  review: "ready-for-review",
+  approve: "approve",
+  baseline: "baseline",
+} as const;
+
+export async function transitionRequirement(
+  _previous: RequirementTransitionState,
+  form: FormData,
+): Promise<RequirementTransitionState> {
+  const workspace = entityIdSchema.safeParse(form.get("workspaceId"));
+  const project = entityIdSchema.safeParse(form.get("projectId"));
+  const id = entityIdSchema.safeParse(form.get("id"));
+  const input = requirementTransitionSchema.safeParse({
+    expectedVersion: Number(form.get("expectedVersion")),
+  });
+  const intent = String(form.get("intent"));
+  const endpoint =
+    transitionEndpoints[intent as keyof typeof transitionEndpoints];
+  if (
+    !workspace.success ||
+    !project.success ||
+    !id.success ||
+    !input.success ||
+    !endpoint
+  )
+    return { error: "Yêu cầu chuyển trạng thái chưa hợp lệ." };
+
+  try {
+    await apiRequest(
+      `/workspaces/${workspace.data}/projects/${project.data}/requirements/${id.data}/${endpoint}`,
+      requirementDtoSchema,
+      { method: "POST", body: input.data },
+    );
+  } catch (error) {
+    return error instanceof ApiError
+      ? {
+          error:
+            error.status === 409
+              ? "Yêu cầu đã thay đổi hoặc không còn ở trạng thái phù hợp. Hãy mở lại trang để kiểm tra."
+              : error.message,
+        }
+      : { error: "Chưa chuyển được trạng thái yêu cầu. Hãy thử lại." };
+  }
+  revalidatePath("/requirements");
+  redirect(
+    `/requirements?workspace=${workspace.data}&project=${project.data}&id=${id.data}&notice=${intent}`,
   );
 }

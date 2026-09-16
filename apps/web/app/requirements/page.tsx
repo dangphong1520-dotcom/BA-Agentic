@@ -8,7 +8,8 @@ import {
 import { apiRequest, ApiError } from "@/lib/api";
 import { RequirementForm } from "./form";
 import { RequirementEvidence } from "./evidence";
-import { typeLabels, priorityLabels, textFields } from "./labels";
+import { RequirementLifecycle } from "./lifecycle";
+import { typeLabels, priorityLabels, statusLabels, textFields } from "./labels";
 export const dynamic = "force-dynamic";
 export default async function Requirements({
   searchParams,
@@ -19,6 +20,7 @@ export default async function Requirements({
     id?: string;
     view?: string;
     saved?: string;
+    notice?: string;
   }>;
 }) {
   const query = await searchParams;
@@ -85,7 +87,11 @@ export default async function Requirements({
       </header>
       <main id="main-content">
         <nav className="breadcrumb">
-          <Link href={`/questions?workspace=${workspace.data}&project=${project.data}${selected ? `&requirement=${selected.id}` : ""}`}>Câu hỏi làm rõ</Link>
+          <Link
+            href={`/questions?workspace=${workspace.data}&project=${project.data}${selected ? `&requirement=${selected.id}` : ""}`}
+          >
+            Câu hỏi làm rõ
+          </Link>
           <Link href={base}>Yêu cầu nghiệp vụ</Link>
           <Link
             href={`/sources?workspace=${workspace.data}&project=${project.data}`}
@@ -113,6 +119,11 @@ export default async function Requirements({
             </Link>
           )}
         </section>
+        {query.notice && (
+          <p className="success-message" role="status">
+            Trạng thái yêu cầu đã được cập nhật và lưu vào lịch sử.
+          </p>
+        )}
         {editing ? (
           <div className="editor-grid">
             <section className="panel">
@@ -138,7 +149,8 @@ export default async function Requirements({
                   <h3>{version.snapshot.title}</h3>
                   <p>
                     {typeLabels[version.snapshot.type]} ·{" "}
-                    {priorityLabels[version.snapshot.priority]}
+                    {priorityLabels[version.snapshot.priority]} ·{" "}
+                    {statusLabels[version.snapshot.status]}
                   </p>
                   {textFields.map(([key, label]) => (
                     <div key={key}>
@@ -160,7 +172,9 @@ export default async function Requirements({
                 className="project-card"
                 href={`${base}&id=${row.id}`}
               >
-                <span className="eyebrow">BẢN NHÁP · V{row.version}</span>
+                <span className="eyebrow">
+                  {statusLabels[row.status]} · V{row.version}
+                </span>
                 <h2>{row.title}</h2>
                 <p>{row.description || "Chưa có mô tả"}</p>
                 <div className="card-footer">
@@ -180,12 +194,23 @@ export default async function Requirements({
           </section>
         )}
         {selected && (
-          <RequirementEvidence
-            workspaceId={workspace.data}
-            projectId={project.data}
-            requirementId={selected.id}
-            version={selected.version}
-          />
+          <>
+            <RequirementLifecycle
+              workspaceId={workspace.data}
+              projectId={project.data}
+              requirement={selected}
+            />
+            <RequirementEvidence
+              workspaceId={workspace.data}
+              projectId={project.data}
+              requirementId={selected.id}
+              version={selected.version}
+              readOnly={
+                selected.status === "APPROVED" ||
+                selected.status === "BASELINED"
+              }
+            />
+          </>
         )}
       </main>
     </div>

@@ -214,6 +214,24 @@ export function sourceChecks(
         ),
       ).toEqual([2, 1]);
     });
+    it('allows evidence while clarification remains editable', async () => {
+      const created = await api()
+        .post(`${base()}/requirements`)
+        .set('Authorization', auth())
+        .send(draft)
+        .expect(201);
+      const clarificationId = requirementDtoSchema.parse(created.body).id;
+      await api()
+        .post(`${base()}/requirements/${clarificationId}/request-clarification`)
+        .set('Authorization', auth())
+        .send({ expectedVersion: 1 })
+        .expect(201);
+      await api()
+        .post(`${base()}/requirements/${clarificationId}/evidence`)
+        .set('Authorization', auth())
+        .send({ segmentId, expectedVersion: 2 })
+        .expect(201);
+    });
     it('serializes reference attachment against a concurrent content update', async () => {
       const created = await api()
         .post(`${base()}/requirements`)

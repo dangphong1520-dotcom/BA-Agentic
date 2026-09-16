@@ -12,6 +12,13 @@ export const requirementPrioritySchema = z.enum([
   "COULD",
   "WONT",
 ]);
+export const requirementStatusSchema = z.enum([
+  "DRAFT",
+  "CLARIFICATION_REQUIRED",
+  "READY_FOR_REVIEW",
+  "APPROVED",
+  "BASELINED",
+]);
 const text = z.string().trim().max(4000);
 export const requirementFieldsSchema = z.strictObject({
   title: z.string().trim().min(1).max(120),
@@ -30,13 +37,20 @@ export const createRequirementSchema = requirementFieldsSchema;
 export const updateRequirementSchema = requirementFieldsSchema.extend({
   expectedVersion: z.number().int().positive(),
 });
+export const requirementTransitionSchema = z.strictObject({
+  expectedVersion: z.number().int().positive(),
+});
 export const requirementDtoSchema = requirementFieldsSchema.extend({
   id: z.uuid(),
   workspaceId: z.uuid(),
   projectId: z.uuid(),
-  status: z.literal("DRAFT"),
+  status: requirementStatusSchema,
   version: z.number().int().positive(),
   createdBy: z.uuid(),
+  approvedBy: z.uuid().nullable().default(null),
+  approvedAt: z.iso.datetime().nullable().default(null),
+  baselinedBy: z.uuid().nullable().default(null),
+  baselinedAt: z.iso.datetime().nullable().default(null),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });

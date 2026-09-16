@@ -15,6 +15,7 @@ import {
   createRequirementSchema,
   entityIdSchema,
   updateRequirementSchema,
+  requirementTransitionSchema,
 } from '@ba/contracts';
 import { DevelopmentAuthGuard } from '../auth/development-auth.guard.js';
 import { RequirementService } from './requirement.service.js';
@@ -94,6 +95,68 @@ export class RequirementController {
       ...scope(params),
       parse(entityIdSchema, params.id),
       parse(updateRequirementSchema, body),
+    );
+  }
+
+  private transitionBody(body: unknown) {
+    const parsed = requirementTransitionSchema.safeParse(body);
+    if (!parsed.success) throw new BadRequestException('Invalid transition');
+    return parsed.data.expectedVersion;
+  }
+
+  @Post(':id/request-clarification')
+  requestClarification(
+    @Res({ passthrough: true }) response: Response<unknown, { userId: string }>,
+    @Param() params: Params,
+    @Body() body: unknown,
+  ) {
+    return this.service.requestClarification(
+      response.locals.userId,
+      ...scope(params),
+      parse(entityIdSchema, params.id),
+      this.transitionBody(body),
+    );
+  }
+
+  @Post(':id/ready-for-review')
+  readyForReview(
+    @Res({ passthrough: true }) response: Response<unknown, { userId: string }>,
+    @Param() params: Params,
+    @Body() body: unknown,
+  ) {
+    return this.service.readyForReview(
+      response.locals.userId,
+      ...scope(params),
+      parse(entityIdSchema, params.id),
+      this.transitionBody(body),
+    );
+  }
+
+  @Post(':id/approve')
+  approve(
+    @Res({ passthrough: true }) response: Response<unknown, { userId: string }>,
+    @Param() params: Params,
+    @Body() body: unknown,
+  ) {
+    return this.service.approve(
+      response.locals.userId,
+      ...scope(params),
+      parse(entityIdSchema, params.id),
+      this.transitionBody(body),
+    );
+  }
+
+  @Post(':id/baseline')
+  baseline(
+    @Res({ passthrough: true }) response: Response<unknown, { userId: string }>,
+    @Param() params: Params,
+    @Body() body: unknown,
+  ) {
+    return this.service.baseline(
+      response.locals.userId,
+      ...scope(params),
+      parse(entityIdSchema, params.id),
+      this.transitionBody(body),
     );
   }
 }
