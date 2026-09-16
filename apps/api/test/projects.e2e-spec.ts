@@ -12,6 +12,7 @@ import { DatabaseService } from '../src/database/database.service.js';
 import { entityIdSchema } from '@ba/contracts';
 import pg from 'pg';
 import { sourceChecks } from './sources.checks.js';
+import { questionChecks } from './questions.checks.js';
 
 describe('Workspace and Project persistence', () => {
   let db: PGlite;
@@ -503,6 +504,22 @@ describe('Workspace and Project persistence', () => {
   });
 
   sourceChecks(
+    () => ({
+      app,
+      token,
+      userId,
+      workspaceId,
+      projectId,
+      foreignWorkspace,
+      foreignProject,
+    }),
+    async () => {
+      await app.close();
+      app = await boot();
+    },
+  );
+
+  questionChecks(
     () => ({
       app,
       token,

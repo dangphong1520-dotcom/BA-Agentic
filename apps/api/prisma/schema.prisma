@@ -17,6 +17,8 @@ model User {
   requirementVersions RequirementVersion[]
   sources             Source[]
   evidence            RequirementEvidence[]
+  questions           Question[]
+  questionVersions    QuestionVersion[]
 }
 
 model Workspace {
@@ -51,6 +53,7 @@ model Project {
   members      ProjectMember[]
   requirements Requirement[]
   sources      Source[]
+  questions    Question[]
 
   @@unique([workspaceId, id])
 }
@@ -97,6 +100,7 @@ model Requirement {
   updatedAt          DateTime              @updatedAt
   versions           RequirementVersion[]
   evidence           RequirementEvidence[]
+  questions          Question[]
 
   @@unique([projectId, id])
   @@index([workspaceId, projectId, createdAt, id])
@@ -182,4 +186,66 @@ model RequirementEvidence {
   createdAt          DateTime           @default(now())
 
   @@unique([requirementId, requirementVersion, segmentId])
+}
+
+enum QuestionStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
+
+enum QuestionPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum QuestionCategory {
+  BUSINESS
+  PROCESS
+  DATA
+  RULE
+  SYSTEM
+  TECHNICAL
+  UI_UX
+  EXCEPTION
+  SECURITY
+  DEPENDENCY
+}
+
+model Question {
+  id            String            @id @default(uuid()) @db.Uuid
+  workspaceId   String            @db.Uuid
+  projectId     String            @db.Uuid
+  project       Project           @relation(fields: [workspaceId, projectId], references: [workspaceId, id], onDelete: Restrict)
+  requirementId String?           @db.Uuid
+  requirement   Requirement?      @relation(fields: [projectId, requirementId], references: [projectId, id], onDelete: Restrict)
+  question      String            @db.VarChar(2000)
+  category      QuestionCategory
+  priority      QuestionPriority
+  blocking      Boolean           @default(false)
+  stakeholder   String            @default("") @db.VarChar(120)
+  answer        String            @default("") @db.VarChar(4000)
+  status        QuestionStatus    @default(OPEN)
+  version       Int               @default(1)
+  createdBy     String            @db.Uuid
+  creator       User              @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  versions      QuestionVersion[]
+
+  @@index([workspaceId, projectId, createdAt, id])
+  @@index([projectId, requirementId])
+}
+
+model QuestionVersion {
+  questionId String   @db.Uuid
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  version    Int
+  snapshot   Json
+  changedBy  String   @db.Uuid
+  author     User     @relation(fields: [changedBy], references: [id], onDelete: Restrict)
+  createdAt  DateTime @default(now())
+
+  @@id([questionId, version])
 }

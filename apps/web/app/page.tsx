@@ -221,6 +221,7 @@ export default async function Home({
                       >
                         Nguồn thông tin ↗
                       </Link>
+                      {" "}<Link className="button secondary" href={`/questions?workspace=${workspace.id}&project=${project.id}`}>Câu hỏi làm rõ ↗</Link>
                     </p>
                   )}
                   <div className="editor-grid">

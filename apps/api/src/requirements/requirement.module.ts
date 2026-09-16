@@ -7,5 +7,6 @@ import { RequirementService } from './requirement.service.js';
   imports: [ProjectModule],
   controllers: [RequirementController],
   providers: [RequirementRepository, RequirementService],
+  exports: [RequirementService],
 })
 export class RequirementModule {}

@@ -85,6 +85,7 @@ export default async function Requirements({
       </header>
       <main id="main-content">
         <nav className="breadcrumb">
+          <Link href={`/questions?workspace=${workspace.data}&project=${project.data}${selected ? `&requirement=${selected.id}` : ""}`}>Câu hỏi làm rõ</Link>
           <Link href={base}>Yêu cầu nghiệp vụ</Link>
           <Link
             href={`/sources?workspace=${workspace.data}&project=${project.data}`}
