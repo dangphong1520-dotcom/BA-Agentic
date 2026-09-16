@@ -220,8 +220,19 @@ export default async function Home({
                         href={`/sources?workspace=${workspace.id}&project=${project.id}`}
                       >
                         Nguồn thông tin ↗
+                      </Link>{" "}
+                      <Link
+                        className="button secondary"
+                        href={`/questions?workspace=${workspace.id}&project=${project.id}`}
+                      >
+                        Câu hỏi làm rõ ↗
+                      </Link>{" "}
+                      <Link
+                        className="button secondary"
+                        href={`/business-rules?workspace=${workspace.id}&project=${project.id}`}
+                      >
+                        Quy tắc nghiệp vụ ↗
                       </Link>
-                      {" "}<Link className="button secondary" href={`/questions?workspace=${workspace.id}&project=${project.id}`}>Câu hỏi làm rõ ↗</Link>
                     </p>
                   )}
                   <div className="editor-grid">

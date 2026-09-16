@@ -5,9 +5,16 @@ import { ProjectModule } from './projects/project.module.js';
 import { RequirementModule } from './requirements/requirement.module.js';
 import { SourceModule } from './sources/source.module.js';
 import { QuestionModule } from './questions/question.module.js';
+import { BusinessRuleModule } from './business-rules/business-rule.module.js';
 
 @Module({
-  imports: [ProjectModule, RequirementModule, SourceModule, QuestionModule],
+  imports: [
+    ProjectModule,
+    RequirementModule,
+    SourceModule,
+    QuestionModule,
+    BusinessRuleModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
