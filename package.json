@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "local:start": "powershell -NoProfile -ExecutionPolicy Bypass -File apps/api/scripts/local-start.ps1",
     "dev": "pnpm --filter @ba/contracts build && pnpm --filter api db:generate && concurrently -n WEB,API,WORKER -c auto \"pnpm --filter web dev\" \"pnpm --filter api start:dev\" \"pnpm --filter worker dev\"",
     "build": "pnpm -r --if-present build",
     "lint": "pnpm -r --if-present lint",

@@ -16,3 +16,4 @@ Thumbs.db
 package.json.backup
 
 apps/api/src/generated/
+*.tsbuildinfo
