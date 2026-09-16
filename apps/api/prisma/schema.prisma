@@ -9,12 +9,14 @@ datasource db {
 }
 
 model User {
-  id                  String               @id @default(uuid()) @db.Uuid
-  displayName         String               @db.VarChar(120)
+  id                  String                @id @default(uuid()) @db.Uuid
+  displayName         String                @db.VarChar(120)
   memberships         WorkspaceMember[]
   projects            ProjectMember[]
   requirements        Requirement[]
   requirementVersions RequirementVersion[]
+  sources             Source[]
+  evidence            RequirementEvidence[]
 }
 
 model Workspace {
@@ -48,6 +50,7 @@ model Project {
   workspace    Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
   members      ProjectMember[]
   requirements Requirement[]
+  sources      Source[]
 
   @@unique([workspaceId, id])
 }
@@ -71,40 +74,43 @@ enum RequirementPriority {
 }
 
 model Requirement {
-  id                 String               @id @default(uuid()) @db.Uuid
-  workspaceId        String               @db.Uuid
-  projectId          String               @db.Uuid
-  project            Project              @relation(fields: [workspaceId, projectId], references: [workspaceId, id], onDelete: Restrict)
-  title              String               @db.VarChar(120)
+  id                 String                @id @default(uuid()) @db.Uuid
+  workspaceId        String                @db.Uuid
+  projectId          String                @db.Uuid
+  project            Project               @relation(fields: [workspaceId, projectId], references: [workspaceId, id], onDelete: Restrict)
+  title              String                @db.VarChar(120)
   type               RequirementType
   priority           RequirementPriority
-  status             RequirementStatus    @default(DRAFT)
-  description        String               @db.VarChar(4000)
-  businessGoal       String               @db.VarChar(4000)
-  actor              String               @db.VarChar(4000)
-  preconditions      String               @db.VarChar(4000)
-  mainFlow           String               @db.VarChar(4000)
-  exceptionFlow      String               @db.VarChar(4000)
-  acceptanceCriteria String               @db.VarChar(4000)
-  sourceNote         String               @db.VarChar(4000)
-  version            Int                  @default(1)
-  createdBy          String               @db.Uuid
-  creator            User                 @relation(fields: [createdBy], references: [id], onDelete: Restrict)
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  status             RequirementStatus     @default(DRAFT)
+  description        String                @db.VarChar(4000)
+  businessGoal       String                @db.VarChar(4000)
+  actor              String                @db.VarChar(4000)
+  preconditions      String                @db.VarChar(4000)
+  mainFlow           String                @db.VarChar(4000)
+  exceptionFlow      String                @db.VarChar(4000)
+  acceptanceCriteria String                @db.VarChar(4000)
+  sourceNote         String                @db.VarChar(4000)
+  version            Int                   @default(1)
+  createdBy          String                @db.Uuid
+  creator            User                  @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
   versions           RequirementVersion[]
+  evidence           RequirementEvidence[]
 
+  @@unique([projectId, id])
   @@index([workspaceId, projectId, createdAt, id])
 }
 
 model RequirementVersion {
-  requirementId String      @db.Uuid
-  requirement   Requirement @relation(fields: [requirementId], references: [id], onDelete: Restrict)
+  requirementId String                @db.Uuid
+  requirement   Requirement           @relation(fields: [requirementId], references: [id], onDelete: Restrict)
   version       Int
   snapshot      Json
-  changedBy     String      @db.Uuid
-  author        User        @relation(fields: [changedBy], references: [id], onDelete: Restrict)
-  createdAt     DateTime    @default(now())
+  changedBy     String                @db.Uuid
+  author        User                  @relation(fields: [changedBy], references: [id], onDelete: Restrict)
+  createdAt     DateTime              @default(now())
+  evidence      RequirementEvidence[]
 
   @@id([requirementId, version])
 }
@@ -119,4 +125,61 @@ model ProjectMember {
 
   @@id([projectId, userId])
   @@index([workspaceId, userId])
+}
+
+enum SourceType {
+  MANUAL_INPUT
+  MEETING
+  DOCUMENT
+  EMAIL
+  CHAT
+}
+
+model Source {
+  id          String          @id @default(uuid()) @db.Uuid
+  workspaceId String          @db.Uuid
+  projectId   String          @db.Uuid
+  project     Project         @relation(fields: [workspaceId, projectId], references: [workspaceId, id], onDelete: Restrict)
+  title       String          @db.VarChar(120)
+  type        SourceType
+  content     String          @db.Text
+  revision    Int             @default(1)
+  createdBy   String          @db.Uuid
+  creator     User            @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt   DateTime        @default(now())
+  segments    SourceSegment[]
+
+  @@unique([projectId, id])
+  @@index([workspaceId, projectId, createdAt, id])
+}
+
+model SourceSegment {
+  id          String                @id @default(uuid()) @db.Uuid
+  projectId   String                @db.Uuid
+  sourceId    String                @db.Uuid
+  source      Source                @relation(fields: [projectId, sourceId], references: [projectId, id], onDelete: Restrict)
+  line        Int
+  startOffset Int
+  endOffset   Int
+  text        String                @db.Text
+  evidence    RequirementEvidence[]
+
+  @@unique([projectId, id])
+  @@unique([sourceId, line])
+}
+
+model RequirementEvidence {
+  id                 String             @id @default(uuid()) @db.Uuid
+  projectId          String             @db.Uuid
+  requirementId      String             @db.Uuid
+  requirement        Requirement        @relation(fields: [projectId, requirementId], references: [projectId, id], onDelete: Restrict)
+  requirementVersion Int
+  version            RequirementVersion @relation(fields: [requirementId, requirementVersion], references: [requirementId, version], onDelete: Restrict)
+  segmentId          String             @db.Uuid
+  segment            SourceSegment      @relation(fields: [projectId, segmentId], references: [projectId, id], onDelete: Restrict)
+  createdBy          String             @db.Uuid
+  creator            User               @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt          DateTime           @default(now())
+
+  @@unique([requirementId, requirementVersion, segmentId])
 }

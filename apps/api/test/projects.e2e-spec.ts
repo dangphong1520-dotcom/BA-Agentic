@@ -11,6 +11,7 @@ import { configureApp } from '../src/configure-app.js';
 import { DatabaseService } from '../src/database/database.service.js';
 import { entityIdSchema } from '@ba/contracts';
 import pg from 'pg';
+import { sourceChecks } from './sources.checks.js';
 
 describe('Workspace and Project persistence', () => {
   let db: PGlite;
@@ -487,21 +488,35 @@ describe('Workspace and Project persistence', () => {
         .expect(200);
       expect(rows.body).toHaveLength(1);
       await expect(
-        app
-          .get(DatabaseService)
-          .db.requirement.create({
-            data: {
-              ...draft,
-              type: 'FUNCTIONAL',
-              priority: 'MUST',
-              workspaceId: foreignWorkspace,
-              projectId,
-              createdBy: userId,
-            },
-          }),
+        app.get(DatabaseService).db.requirement.create({
+          data: {
+            ...draft,
+            type: 'FUNCTIONAL',
+            priority: 'MUST',
+            workspaceId: foreignWorkspace,
+            projectId,
+            createdBy: userId,
+          },
+        }),
       ).rejects.toThrow();
     });
   });
+
+  sourceChecks(
+    () => ({
+      app,
+      token,
+      userId,
+      workspaceId,
+      projectId,
+      foreignWorkspace,
+      foreignProject,
+    }),
+    async () => {
+      await app.close();
+      app = await boot();
+    },
+  );
 
   it('disables development authentication in production', async () => {
     vi.stubEnv('NODE_ENV', 'production');

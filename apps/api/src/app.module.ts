@@ -3,9 +3,10 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { ProjectModule } from './projects/project.module.js';
 import { RequirementModule } from './requirements/requirement.module.js';
+import { SourceModule } from './sources/source.module.js';
 
 @Module({
-  imports: [ProjectModule, RequirementModule],
+  imports: [ProjectModule, RequirementModule, SourceModule],
   controllers: [AppController],
   providers: [AppService],
 })

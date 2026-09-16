@@ -7,6 +7,7 @@ import {
 } from "@ba/contracts";
 import { apiRequest, ApiError } from "@/lib/api";
 import { RequirementForm } from "./form";
+import { RequirementEvidence } from "./evidence";
 import { typeLabels, priorityLabels, textFields } from "./labels";
 export const dynamic = "force-dynamic";
 export default async function Requirements({
@@ -85,6 +86,11 @@ export default async function Requirements({
       <main id="main-content">
         <nav className="breadcrumb">
           <Link href={base}>Yêu cầu nghiệp vụ</Link>
+          <Link
+            href={`/sources?workspace=${workspace.data}&project=${project.data}`}
+          >
+            Nguồn thông tin
+          </Link>
           {editing && <span>/ {selected ? "Chi tiết" : "Tạo bản nháp"}</span>}
         </nav>
         <section className="page-heading">
@@ -171,6 +177,14 @@ export default async function Requirements({
               Tạo yêu cầu đầu tiên
             </Link>
           </section>
+        )}
+        {selected && (
+          <RequirementEvidence
+            workspaceId={workspace.data}
+            projectId={project.data}
+            requirementId={selected.id}
+            version={selected.version}
+          />
         )}
       </main>
     </div>

@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+.evidence-panel {
+  margin-top: 32px;
+}
+.source-segment {
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  overflow-wrap: anywhere;
+  scroll-margin-top: 24px;
+}
+.source-segment blockquote,
+.evidence-panel blockquote {
+  border-left: 3px solid var(--green);
+  padding-left: 16px;
+  margin: 16px 0;
+}
+.requirements-shell pre {
+  font-family: inherit;
+  overflow-wrap: anywhere;
+}
+
 .requirements-shell {
   max-width: 1440px;
   margin: auto;

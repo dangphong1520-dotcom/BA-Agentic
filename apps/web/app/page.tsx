@@ -214,6 +214,12 @@ export default async function Home({
                         href={`/requirements?workspace=${workspace.id}&project=${project.id}`}
                       >
                         Yêu cầu nghiệp vụ ↗
+                      </Link>{" "}
+                      <Link
+                        className="button secondary"
+                        href={`/sources?workspace=${workspace.id}&project=${project.id}`}
+                      >
+                        Nguồn thông tin ↗
                       </Link>
                     </p>
                   )}
