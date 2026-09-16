@@ -232,6 +232,12 @@ export default async function Home({
                         href={`/business-rules?workspace=${workspace.id}&project=${project.id}`}
                       >
                         Quy tắc nghiệp vụ ↗
+                      </Link>{" "}
+                      <Link
+                        className="button secondary"
+                        href={`/decisions?workspace=${workspace.id}&project=${project.id}`}
+                      >
+                        Quyết định ↗
                       </Link>
                     </p>
                   )}

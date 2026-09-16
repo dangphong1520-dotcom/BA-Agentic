@@ -3,6 +3,7 @@ export * from "./requirements.js";
 export * from "./sources.js";
 export * from "./questions.js";
 export * from "./business-rules.js";
+export * from "./decisions.js";
 
 export const entityIdSchema = z.uuid();
 const nameSchema = z.string().trim().min(1).max(120);

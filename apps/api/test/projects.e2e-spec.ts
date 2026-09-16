@@ -14,6 +14,7 @@ import pg from 'pg';
 import { sourceChecks } from './sources.checks.js';
 import { questionChecks } from './questions.checks.js';
 import { businessRuleChecks } from './business-rules.checks.js';
+import { decisionChecks } from './decisions.checks.js';
 
 describe('Workspace and Project persistence', () => {
   let db: PGlite;
@@ -537,6 +538,22 @@ describe('Workspace and Project persistence', () => {
   );
 
   businessRuleChecks(
+    () => ({
+      app,
+      token,
+      userId,
+      workspaceId,
+      projectId,
+      foreignWorkspace,
+      foreignProject,
+    }),
+    async () => {
+      await app.close();
+      app = await boot();
+    },
+  );
+
+  decisionChecks(
     () => ({
       app,
       token,

@@ -6,6 +6,7 @@ import { RequirementModule } from './requirements/requirement.module.js';
 import { SourceModule } from './sources/source.module.js';
 import { QuestionModule } from './questions/question.module.js';
 import { BusinessRuleModule } from './business-rules/business-rule.module.js';
+import { DecisionModule } from './decisions/decision.module.js';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { BusinessRuleModule } from './business-rules/business-rule.module.js';
     SourceModule,
     QuestionModule,
     BusinessRuleModule,
+    DecisionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

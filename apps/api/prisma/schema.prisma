@@ -22,6 +22,9 @@ model User {
   businessRulesCreated  BusinessRule[]        @relation("BusinessRuleCreator")
   businessRulesApproved BusinessRule[]        @relation("BusinessRuleApprover")
   businessRuleVersions  BusinessRuleVersion[]
+  decisionsCreated      Decision[]            @relation("DecisionCreator")
+  decisionsMade         Decision[]            @relation("DecisionMaker")
+  decisionVersions      DecisionVersion[]
 }
 
 model Workspace {
@@ -58,6 +61,7 @@ model Project {
   sources       Source[]
   questions     Question[]
   businessRules BusinessRule[]
+  decisions     Decision[]
 
   @@unique([workspaceId, id])
 }
@@ -106,6 +110,7 @@ model Requirement {
   evidence           RequirementEvidence[]
   questions          Question[]
   businessRuleLinks  BusinessRuleRequirement[]
+  decisionLinks      DecisionRequirement[]
 
   @@unique([projectId, id])
   @@index([workspaceId, projectId, createdAt, id])
@@ -315,4 +320,64 @@ model BusinessRuleVersion {
   createdAt      DateTime     @default(now())
 
   @@id([businessRuleId, version])
+}
+
+enum DecisionStatus {
+  PROPOSED
+  APPROVED
+  REJECTED
+  SUPERSEDED
+  DEPRECATED
+}
+
+model Decision {
+  id             String                @id @default(uuid()) @db.Uuid
+  workspaceId    String                @db.Uuid
+  projectId      String                @db.Uuid
+  project        Project               @relation(fields: [workspaceId, projectId], references: [workspaceId, id], onDelete: Restrict)
+  code           String                @db.VarChar(12)
+  title          String                @db.VarChar(120)
+  description    String                @db.VarChar(4000)
+  rationale      String                @db.VarChar(4000)
+  status         DecisionStatus        @default(PROPOSED)
+  version        Int                   @default(1)
+  createdBy      String                @db.Uuid
+  creator        User                  @relation("DecisionCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  decidedBy      String?               @db.Uuid
+  decisionMaker  User?                 @relation("DecisionMaker", fields: [decidedBy], references: [id], onDelete: Restrict)
+  decisionDate   DateTime?
+  supersededById String?               @db.Uuid
+  supersededBy   Decision?             @relation("DecisionSupersession", fields: [projectId, supersededById], references: [projectId, id], onDelete: Restrict)
+  supersedes     Decision[]            @relation("DecisionSupersession")
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  requirements   DecisionRequirement[]
+  versions       DecisionVersion[]
+
+  @@unique([projectId, id])
+  @@unique([projectId, code])
+  @@index([workspaceId, projectId, createdAt, id])
+}
+
+model DecisionRequirement {
+  projectId     String      @db.Uuid
+  decisionId    String      @db.Uuid
+  requirementId String      @db.Uuid
+  decision      Decision    @relation(fields: [projectId, decisionId], references: [projectId, id], onDelete: Restrict)
+  requirement   Requirement @relation(fields: [projectId, requirementId], references: [projectId, id], onDelete: Restrict)
+
+  @@id([decisionId, requirementId])
+  @@index([projectId, requirementId])
+}
+
+model DecisionVersion {
+  decisionId String   @db.Uuid
+  decision   Decision @relation(fields: [decisionId], references: [id], onDelete: Restrict)
+  version    Int
+  snapshot   Json
+  changedBy  String   @db.Uuid
+  author     User     @relation(fields: [changedBy], references: [id], onDelete: Restrict)
+  createdAt  DateTime @default(now())
+
+  @@id([decisionId, version])
 }

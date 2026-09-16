@@ -530,7 +530,7 @@ Repository inspection on 2026-09-12 distinguishes the existing scaffold from the
 | Component | Observed implementation | Planned capability |
 | --- | --- | --- |
 | Web | Next.js, React, and TypeScript application scaffold | BA workspaces and contextual AI review |
-| API | NestJS ESM API with Workspace, Project, Requirement, Source/Evidence, Clarification Question, and governed Business Rule modules | Remaining governed domain modules, production authentication, and Agent Run APIs |
+| API | NestJS ESM API with Workspace, Project, Requirement, Source/Evidence, Clarification Question, Business Rule, and governed Decision modules | Remaining governed domain modules, production authentication, and Agent Run APIs |
 | Worker | TypeScript entry point that logs startup | Queue consumers, ingestion, and governed Agent execution |
 | Shared packages | contracts package with strict request schemas and DTOs; ui/config/utils remain empty | Shared schemas, DTOs, configuration, and reusable components |
 | Persistence | PostgreSQL/Prisma persistence with version history and project-scoped links for requirements, evidence, and questions; Worker has no database integration | Incremental pgvector support and remaining governed entities |
