@@ -109,7 +109,7 @@ export default async function Home({
         <div className="side-divider" />
         <Link
           href={workspace ? `/?workspace=${workspace.id}` : "/"}
-          className="side-active"
+          className="side-link side-active"
         >
           <span aria-hidden="true">▦</span> Dự án{" "}
           <span className="tiny-count">{projects.length}</span>
@@ -137,27 +137,26 @@ export default async function Home({
       </aside>
       <div className="main-shell">
         <header className="topbar">
-          <div>
-            <span className="muted">Không gian làm việc</span>
-            <span className="slash">/</span>
-            <span>{workspace?.name ?? "Bắt đầu"}</span>
-          </div>
+          <nav className="topbar-breadcrumb" aria-label="Breadcrumb">
+            <Link href={workspace ? `/?workspace=${workspace.id}` : "/"}>
+              Không gian làm việc
+            </Link>
+            <span aria-hidden="true">/</span>
+            {project ? (
+              <>
+                <Link href={`/?workspace=${workspace?.id}`}>{workspace?.name}</Link>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">{project.name}</span>
+              </>
+            ) : (
+              <span aria-current="page">{workspace?.name ?? "Bắt đầu"}</span>
+            )}
+          </nav>
           <span className="topbar-label">
             BA AGENT PLATFORM <span aria-hidden="true">✳</span>
           </span>
         </header>
         <main id="main-content">
-          <div className="breadcrumb">
-            <Link href={workspace ? `/?workspace=${workspace.id}` : "/"}>
-              Dự án
-            </Link>
-            {editing && (
-              <>
-                <span>/</span>
-                <span>{project ? "Thông tin dự án" : "Tạo dự án"}</span>
-              </>
-            )}
-          </div>
           {error ? (
             <section className="error-panel full-error" role="alert">
               <span className="eyebrow">CHƯA THỂ MỞ KHÔNG GIAN</span>

@@ -8,6 +8,7 @@ import {
 import { ApiError, apiRequest } from "@/lib/api";
 import { SourceForm } from "./forms";
 import { SourceAnalysisPanel } from "./analysis";
+import { ProjectShell } from "../project-shell";
 export const dynamic = "force-dynamic";
 export default async function Sources({
   searchParams,
@@ -68,22 +69,17 @@ export default async function Sources({
   }
   const { currentProject, sources, source, analyses } = data;
   return (
-    <div className="requirements-shell">
-      <header className="topbar">
-        <Link href="/">BA Agent · Workspace</Link>
-        <Link href={`/?workspace=${workspace.data}&project=${project.data}`}>
-          {currentProject.name}
-        </Link>
-      </header>
-      <main>
-        <nav className="breadcrumb">
-          <Link href={base}>Nguồn thông tin</Link>
-          <Link
-            href={`/requirements?workspace=${workspace.data}&project=${project.data}`}
-          >
-            Yêu cầu nghiệp vụ
-          </Link>
-        </nav>
+    <ProjectShell
+      workspaceId={workspace.data}
+      project={currentProject}
+      activeSection="sources"
+      breadcrumbs={[
+        { label: "Nguồn thông tin", href: source || q.view === "new" ? base : undefined },
+        ...(source || q.view === "new"
+          ? [{ label: source?.title ?? "Thêm nguồn" }]
+          : []),
+      ]}
+    >
         <section className="page-heading">
           <div>
             <span className="eyebrow">{currentProject.name}</span>
@@ -163,7 +159,6 @@ export default async function Sources({
             </Link>
           </section>
         )}
-      </main>
-    </div>
+    </ProjectShell>
   );
 }

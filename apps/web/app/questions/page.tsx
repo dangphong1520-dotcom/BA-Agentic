@@ -10,6 +10,7 @@ import {
 import { apiRequest, ApiError } from "@/lib/api";
 import { QuestionForm } from "./form";
 import { categoryLabels, priorityLabels, statusLabels } from "./labels";
+import { ProjectShell } from "../project-shell";
 export const dynamic = "force-dynamic";
 export default async function Questions({
   searchParams,
@@ -89,22 +90,17 @@ export default async function Questions({
       (q.blocking !== "1" || (r.blocking && r.status !== "CLOSED")),
   );
   return (
-    <div className="requirements-shell">
-      <header className="topbar">
-        <Link href="/">BA Agent · Workspace</Link>
-        <Link href={`/?workspace=${workspace.data}&project=${project.data}`}>
-          {projectData.name}
-        </Link>
-      </header>
-      <main>
-        <nav className="breadcrumb">
-          <Link href={base}>Câu hỏi làm rõ</Link>
-          <Link
-            href={`/requirements?workspace=${workspace.data}&project=${project.data}`}
-          >
-            Yêu cầu nghiệp vụ
-          </Link>
-        </nav>
+    <ProjectShell
+      workspaceId={workspace.data}
+      project={projectData}
+      activeSection="questions"
+      breadcrumbs={[
+        { label: "Câu hỏi làm rõ", href: selected || q.view === "new" ? base : undefined },
+        ...(selected || q.view === "new"
+          ? [{ label: selected?.question ?? "Tạo câu hỏi" }]
+          : []),
+      ]}
+    >
         <section className="page-heading">
           <div>
             <span className="eyebrow">{projectData.name}</span>
@@ -253,7 +249,6 @@ export default async function Questions({
             )}
           </>
         )}
-      </main>
-    </div>
+    </ProjectShell>
   );
 }

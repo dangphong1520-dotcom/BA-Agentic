@@ -10,6 +10,7 @@ import {
 import { ApiError, apiRequest } from "@/lib/api";
 import { BusinessRuleForm } from "./form";
 import { priorityLabels, statusLabels } from "./labels";
+import { ProjectShell } from "../project-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -83,22 +84,17 @@ export default async function BusinessRules({
     (rule) => !query.status || rule.status === query.status,
   );
   return (
-    <div className="requirements-shell">
-      <header className="topbar">
-        <Link href="/">BA Agent · Workspace</Link>
-        <Link href={`/?workspace=${workspace.data}&project=${project.data}`}>
-          {projectData.name}
-        </Link>
-      </header>
-      <main>
-        <nav className="breadcrumb">
-          <Link href={base}>Quy tắc nghiệp vụ</Link>
-          <Link
-            href={`/requirements?workspace=${workspace.data}&project=${project.data}`}
-          >
-            Yêu cầu nghiệp vụ
-          </Link>
-        </nav>
+    <ProjectShell
+      workspaceId={workspace.data}
+      project={projectData}
+      activeSection="business-rules"
+      breadcrumbs={[
+        { label: "Quy tắc nghiệp vụ", href: selected || query.view === "new" ? base : undefined },
+        ...(selected || query.view === "new"
+          ? [{ label: selected?.title ?? "Tạo quy tắc" }]
+          : []),
+      ]}
+    >
         <section className="page-heading">
           <div>
             <span className="eyebrow">{projectData.name}</span>
@@ -221,7 +217,6 @@ export default async function BusinessRules({
             )}
           </>
         )}
-      </main>
-    </div>
+    </ProjectShell>
   );
 }

@@ -102,6 +102,7 @@ button:disabled {
 .app-shell {
   display: flex;
   min-height: 100vh;
+  padding-left: 268px;
 }
 .sidebar {
   width: 268px;
@@ -111,6 +112,11 @@ button:disabled {
   padding: 35px 23px 20px;
   display: flex;
   flex-direction: column;
+  position: fixed;
+  inset: 0 auto 0 0;
+  height: 100dvh;
+  overflow-y: auto;
+  z-index: 20;
 }
 .brand {
   display: flex;
@@ -219,19 +225,33 @@ button:disabled {
   margin: 26px 0 20px;
 }
 .side-active {
-  display: flex;
-  gap: 13px;
-  padding: 13px;
-  border-radius: 6px;
   background: #e1e9dc;
   font-weight: 600;
 }
-.side-active > span:first-child {
+.side-link {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 11px 13px;
+  border-radius: 6px;
+  color: #53675c;
+}
+.side-link:hover {
+  background: #e8ede4;
+}
+.side-link > span:first-child {
   font-size: 17px;
+  width: 18px;
+  text-align: center;
+}
+.project-navigation {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
 }
 .sidebar-note {
   margin-top: auto;
-  padding: 60px 10px 38px;
+  padding: 38px 10px 28px;
 }
 .note-star {
   font-size: 32px;
@@ -271,6 +291,7 @@ button:disabled {
 .main-shell {
   flex: 1;
   min-width: 0;
+  min-height: 100vh;
 }
 .topbar {
   height: 78px;
@@ -280,6 +301,11 @@ button:disabled {
   border-bottom: 1px solid var(--line);
   padding: 0 45px;
   font-size: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--background) 94%, transparent);
+  backdrop-filter: blur(10px);
 }
 .slash {
   color: #b3bbb3;
@@ -293,6 +319,27 @@ button:disabled {
 .topbar-label span {
   font-size: 18px;
   margin-left: 18px;
+}
+.topbar-breadcrumb,
+.breadcrumb-part {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.topbar-breadcrumb {
+  color: var(--muted);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.topbar-breadcrumb a:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+.topbar-breadcrumb [aria-current="page"] {
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 main {
   max-width: 1360px;
@@ -689,6 +736,9 @@ textarea {
   top: 0;
 }
 @media (max-width: 1100px) {
+  .app-shell {
+    padding-left: 235px;
+  }
   .sidebar {
     width: 235px;
     padding: 28px 18px 20px;
@@ -715,12 +765,16 @@ textarea {
 @media (max-width: 700px) {
   .app-shell {
     display: block;
+    padding-left: 0;
   }
   .sidebar {
     width: 100%;
     padding: 20px;
     border-right: 0;
     border-bottom: 1px solid var(--line);
+    position: static;
+    height: auto;
+    overflow: visible;
   }
   .brand {
     margin-bottom: 22px;
@@ -733,9 +787,12 @@ textarea {
   }
   .sidebar-note,
   .profile,
-  .side-divider,
-  .side-active {
+  .side-divider {
     display: none;
+  }
+  .project-navigation {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 14px;
   }
   .new-workspace {
     margin-top: 10px;

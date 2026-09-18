@@ -9,6 +9,7 @@ import { apiRequest, ApiError } from "@/lib/api";
 import { RequirementForm } from "./form";
 import { RequirementEvidence } from "./evidence";
 import { RequirementLifecycle } from "./lifecycle";
+import { ProjectShell } from "../project-shell";
 import { typeLabels, priorityLabels, statusLabels, textFields } from "./labels";
 export const dynamic = "force-dynamic";
 export default async function Requirements({
@@ -78,28 +79,17 @@ export default async function Requirements({
   const { currentProject, requirements, selected, versions } = data;
   const editing = selected || query.view === "new";
   return (
-    <div className="requirements-shell">
-      <header className="topbar">
-        <Link href="/">BA Agent · Workspace</Link>
-        <Link href={`/?workspace=${workspace.data}&project=${project.data}`}>
-          {currentProject.name}
-        </Link>
-      </header>
-      <main id="main-content">
-        <nav className="breadcrumb">
-          <Link
-            href={`/questions?workspace=${workspace.data}&project=${project.data}${selected ? `&requirement=${selected.id}` : ""}`}
-          >
-            Câu hỏi làm rõ
-          </Link>
-          <Link href={base}>Yêu cầu nghiệp vụ</Link>
-          <Link
-            href={`/sources?workspace=${workspace.data}&project=${project.data}`}
-          >
-            Nguồn thông tin
-          </Link>
-          {editing && <span>/ {selected ? "Chi tiết" : "Tạo bản nháp"}</span>}
-        </nav>
+    <ProjectShell
+      workspaceId={workspace.data}
+      project={currentProject}
+      activeSection="requirements"
+      breadcrumbs={[
+        { label: "Yêu cầu nghiệp vụ", href: editing ? base : undefined },
+        ...(editing
+          ? [{ label: selected ? selected.title : "Tạo bản nháp" }]
+          : []),
+      ]}
+    >
         <section className="page-heading">
           <div>
             <span className="eyebrow">{currentProject.name}</span>
@@ -212,7 +202,6 @@ export default async function Requirements({
             />
           </>
         )}
-      </main>
-    </div>
+    </ProjectShell>
   );
 }
