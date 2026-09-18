@@ -8,6 +8,9 @@ import { QuestionModule } from './questions/question.module.js';
 import { BusinessRuleModule } from './business-rules/business-rule.module.js';
 import { DecisionModule } from './decisions/decision.module.js';
 import { SourceAnalysisModule } from './source-analyses/source-analysis.module.js';
+import { FindingModule } from './findings/finding.module.js';
+import { TraceabilityModule } from './traceability/traceability.module.js';
+import { PortfolioModule } from './portfolio/portfolio.module.js';
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { SourceAnalysisModule } from './source-analyses/source-analysis.module.j
     BusinessRuleModule,
     DecisionModule,
     SourceAnalysisModule,
+    FindingModule,
+    TraceabilityModule,
+    PortfolioModule,
   ],
   controllers: [AppController],
   providers: [AppService],

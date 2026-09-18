@@ -74,19 +74,18 @@ export const requirementReadinessCheckKeySchema = z.enum([
   "SOURCE_EVIDENCE",
   "BLOCKING_QUESTIONS",
 ]);
+export const requirementReadinessCheckSchema = z.object({
+  key: requirementReadinessCheckKeySchema,
+  passed: z.boolean(),
+  hard: z.boolean(),
+});
 export const requirementReadinessSchema = z.object({
   requirementId: z.uuid(),
   requirementVersion: z.number().int().positive(),
   status: requirementReadinessStatusSchema,
   evidenceCount: z.number().int().nonnegative(),
   unresolvedBlockingQuestionCount: z.number().int().nonnegative(),
-  checks: z.array(
-    z.object({
-      key: requirementReadinessCheckKeySchema,
-      passed: z.boolean(),
-      hard: z.boolean(),
-    }),
-  ),
+  checks: z.array(requirementReadinessCheckSchema),
 });
 export type CreateRequirement = z.infer<typeof createRequirementSchema>;
 export type UpdateRequirement = z.infer<typeof updateRequirementSchema>;

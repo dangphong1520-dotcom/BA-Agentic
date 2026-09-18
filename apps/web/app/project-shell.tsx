@@ -11,7 +11,10 @@ type Section =
   | "sources"
   | "questions"
   | "business-rules"
-  | "decisions";
+  | "decisions"
+  | "findings"
+  | "traceability"
+  | "readiness";
 
 const sections: { id: Section; label: string; symbol: string }[] = [
   { id: "requirements", label: "Yêu cầu nghiệp vụ", symbol: "▤" },
@@ -19,6 +22,9 @@ const sections: { id: Section; label: string; symbol: string }[] = [
   { id: "questions", label: "Câu hỏi làm rõ", symbol: "?" },
   { id: "business-rules", label: "Quy tắc nghiệp vụ", symbol: "◇" },
   { id: "decisions", label: "Quyết định", symbol: "✓" },
+  { id: "findings", label: "Phát hiện phân tích", symbol: "!" },
+  { id: "traceability", label: "Truy vết", symbol: "↗" },
+  { id: "readiness", label: "Sẵn sàng dự án", symbol: "◉" },
 ];
 
 export type BreadcrumbItem = { label: string; href?: string };

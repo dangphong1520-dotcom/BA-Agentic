@@ -90,6 +90,30 @@ or NOT_READY and explains each content, evidence, and blocker check. It is
 advisory and never changes lifecycle state. See
 `docs/specs/SPEC-005-REQUIREMENT-READINESS.md`.
 
+### SPEC-006 — Review analysis findings across a project
+
+Trigger: the BA opens the project findings register.
+
+Result: validated findings from completed source analyses are visible with their
+source, classification, confidence, evidence count, and review state. Findings
+remain advisory. See `docs/specs/SPEC-006-FINDINGS-REGISTER.md`.
+
+### SPEC-007 — Inspect requirement traceability
+
+Trigger: the BA opens the project traceability view.
+
+Result: every requirement shows its real evidence, source, question, business
+rule, and decision link counts without inventing relationships. See
+`docs/specs/SPEC-007-TRACEABILITY-VIEW.md`.
+
+### SPEC-008 — Prioritize readiness across a project
+
+Trigger: the BA opens the project readiness portfolio.
+
+Result: SPEC-005 rules are applied consistently to all requirements, with totals
+and missing checks that lead back to governed requirement detail. The assessment
+does not change lifecycle state. See `docs/specs/SPEC-008-READINESS-PORTFOLIO.md`.
+
 ## Runtime for v0.1
 
 ```text

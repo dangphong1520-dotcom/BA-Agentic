@@ -17,6 +17,7 @@ import { businessRuleChecks } from './business-rules.checks.js';
 import { decisionChecks } from './decisions.checks.js';
 import { requirementLifecycleChecks } from './requirement-lifecycle.checks.js';
 import { sourceAnalysisChecks } from './source-analyses.checks.js';
+import { projectInsightChecks } from './project-insights.checks.js';
 
 describe('Workspace and Project persistence', () => {
   let db: PGlite;
@@ -601,6 +602,15 @@ describe('Workspace and Project persistence', () => {
       app = await boot();
     },
   );
+
+  projectInsightChecks(() => ({
+    app,
+    token,
+    workspaceId,
+    projectId,
+    foreignWorkspace,
+    foreignProject,
+  }));
 
   it('disables development authentication in production', async () => {
     vi.stubEnv('NODE_ENV', 'production');
