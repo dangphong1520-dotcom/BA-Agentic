@@ -3,12 +3,14 @@ import {
   entityIdSchema,
   projectDtoSchema,
   requirementDtoSchema,
+  requirementReadinessSchema,
   requirementVersionSchema,
 } from "@ba/contracts";
 import { apiRequest, ApiError } from "@/lib/api";
 import { RequirementForm } from "./form";
 import { RequirementEvidence } from "./evidence";
 import { RequirementLifecycle } from "./lifecycle";
+import { RequirementReadiness } from "./readiness";
 import { ProjectShell } from "../project-shell";
 import { typeLabels, priorityLabels, statusLabels, textFields } from "./labels";
 export const dynamic = "force-dynamic";
@@ -53,13 +55,19 @@ export default async function Requirements({
           requirementDtoSchema,
         )
       : undefined;
-    const versions = selected
-      ? await apiRequest(
-          `${apiBase}/requirements/${selected.id}/versions`,
-          requirementVersionSchema.array(),
-        )
-      : [];
-    data = { currentProject, requirements, selected, versions };
+    const [versions, readiness] = selected
+      ? await Promise.all([
+          apiRequest(
+            `${apiBase}/requirements/${selected.id}/versions`,
+            requirementVersionSchema.array(),
+          ),
+          apiRequest(
+            `${apiBase}/requirements/${selected.id}/readiness`,
+            requirementReadinessSchema,
+          ),
+        ])
+      : [[], undefined];
+    data = { currentProject, requirements, selected, versions, readiness };
   } catch (error) {
     return (
       <main>
@@ -76,7 +84,7 @@ export default async function Requirements({
       </main>
     );
   }
-  const { currentProject, requirements, selected, versions } = data;
+  const { currentProject, requirements, selected, versions, readiness } = data;
   const editing = selected || query.view === "new";
   return (
     <ProjectShell
@@ -190,6 +198,13 @@ export default async function Requirements({
               projectId={project.data}
               requirement={selected}
             />
+            {readiness && (
+              <RequirementReadiness
+                workspaceId={workspace.data}
+                projectId={project.data}
+                readiness={readiness}
+              />
+            )}
             <RequirementEvidence
               workspaceId={workspace.data}
               projectId={project.data}

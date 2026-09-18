@@ -54,6 +54,23 @@ export class RequirementRepository {
     );
   }
 
+  async readinessFacts(projectId: string, requirementId: string) {
+    const [evidenceCount, unresolvedBlockingQuestionCount] = await Promise.all([
+      this.database.db.requirementEvidence.count({
+        where: { projectId, requirementId },
+      }),
+      this.database.db.question.count({
+        where: {
+          projectId,
+          requirementId,
+          blocking: true,
+          status: { not: 'CLOSED' },
+        },
+      }),
+    ]);
+    return { evidenceCount, unresolvedBlockingQuestionCount };
+  }
+
   private snapshot(
     row: NonNullable<Awaited<ReturnType<RequirementRepository['get']>>>,
   ) {

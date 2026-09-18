@@ -81,6 +81,15 @@ the governed review transition can proceed. This gate was identified by the
 SPEC-003 journey and validated through API integration and the local UI. See
 `docs/specs/SPEC-004-BLOCKING-QUESTIONS.md`.
 
+### SPEC-005 — Assess requirement readiness
+
+Trigger: the BA opens a saved requirement to decide what work remains.
+
+Result: a deterministic, project-scoped assessment reports READY, CONDITIONAL,
+or NOT_READY and explains each content, evidence, and blocker check. It is
+advisory and never changes lifecycle state. See
+`docs/specs/SPEC-005-REQUIREMENT-READINESS.md`.
+
 ## Runtime for v0.1
 
 ```text

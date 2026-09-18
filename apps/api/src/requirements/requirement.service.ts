@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import {
   requirementDtoSchema,
+  requirementReadinessSchema,
   requirementVersionSchema,
   type CreateRequirement,
   type UpdateRequirement,
@@ -52,6 +53,64 @@ export class RequirementService {
         createdAt: row.createdAt.toISOString(),
       }),
     );
+  }
+  async readiness(
+    user: string,
+    workspace: string,
+    project: string,
+    id: string,
+  ) {
+    const requirement = await this.get(user, workspace, project, id);
+    const facts = await this.repository.readinessFacts(project, id);
+    const checks = [
+      {
+        key: 'DESCRIPTION' as const,
+        passed: Boolean(requirement.description.trim()),
+        hard: true,
+      },
+      {
+        key: 'BUSINESS_GOAL' as const,
+        passed: Boolean(requirement.businessGoal.trim()),
+        hard: false,
+      },
+      {
+        key: 'ACTOR' as const,
+        passed: Boolean(requirement.actor.trim()),
+        hard: false,
+      },
+      {
+        key: 'MAIN_FLOW' as const,
+        passed: Boolean(requirement.mainFlow.trim()),
+        hard: false,
+      },
+      {
+        key: 'ACCEPTANCE_CRITERIA' as const,
+        passed: Boolean(requirement.acceptanceCriteria.trim()),
+        hard: true,
+      },
+      {
+        key: 'SOURCE_EVIDENCE' as const,
+        passed: facts.evidenceCount > 0,
+        hard: false,
+      },
+      {
+        key: 'BLOCKING_QUESTIONS' as const,
+        passed: facts.unresolvedBlockingQuestionCount === 0,
+        hard: true,
+      },
+    ];
+    const status = checks.some((check) => check.hard && !check.passed)
+      ? 'NOT_READY'
+      : checks.some((check) => !check.passed)
+        ? 'CONDITIONAL'
+        : 'READY';
+    return requirementReadinessSchema.parse({
+      requirementId: id,
+      requirementVersion: requirement.version,
+      status,
+      ...facts,
+      checks,
+    });
   }
   async create(
     user: string,

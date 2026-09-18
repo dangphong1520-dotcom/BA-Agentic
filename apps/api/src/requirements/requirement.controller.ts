@@ -84,6 +84,17 @@ export class RequirementController {
       parse(entityIdSchema, params.id),
     );
   }
+  @Get(':id/readiness')
+  readiness(
+    @Res({ passthrough: true }) res: Response<unknown, { userId: string }>,
+    @Param() params: Params,
+  ) {
+    return this.service.readiness(
+      res.locals.userId,
+      ...scope(params),
+      parse(entityIdSchema, params.id),
+    );
+  }
   @Patch(':id')
   update(
     @Res({ passthrough: true }) res: Response<unknown, { userId: string }>,

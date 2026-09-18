@@ -60,6 +60,37 @@ export const requirementVersionSchema = z.object({
   createdAt: z.iso.datetime(),
   snapshot: requirementDtoSchema,
 });
+export const requirementReadinessStatusSchema = z.enum([
+  "READY",
+  "CONDITIONAL",
+  "NOT_READY",
+]);
+export const requirementReadinessCheckKeySchema = z.enum([
+  "DESCRIPTION",
+  "BUSINESS_GOAL",
+  "ACTOR",
+  "MAIN_FLOW",
+  "ACCEPTANCE_CRITERIA",
+  "SOURCE_EVIDENCE",
+  "BLOCKING_QUESTIONS",
+]);
+export const requirementReadinessSchema = z.object({
+  requirementId: z.uuid(),
+  requirementVersion: z.number().int().positive(),
+  status: requirementReadinessStatusSchema,
+  evidenceCount: z.number().int().nonnegative(),
+  unresolvedBlockingQuestionCount: z.number().int().nonnegative(),
+  checks: z.array(
+    z.object({
+      key: requirementReadinessCheckKeySchema,
+      passed: z.boolean(),
+      hard: z.boolean(),
+    }),
+  ),
+});
 export type CreateRequirement = z.infer<typeof createRequirementSchema>;
 export type UpdateRequirement = z.infer<typeof updateRequirementSchema>;
 export type RequirementDto = z.infer<typeof requirementDtoSchema>;
+export type RequirementReadiness = z.infer<
+  typeof requirementReadinessSchema
+>;

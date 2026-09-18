@@ -1,7 +1,11 @@
 import type { INestApplication } from '@nestjs/common';
 import type { App } from 'supertest/types.js';
 import request from 'supertest';
-import { requirementDtoSchema, requirementVersionSchema } from '@ba/contracts';
+import {
+  requirementDtoSchema,
+  requirementReadinessSchema,
+  requirementVersionSchema,
+} from '@ba/contracts';
 
 export function requirementLifecycleChecks(
   context: () => {
@@ -76,6 +80,46 @@ export function requirementLifecycleChecks(
       });
     });
 
+    it('reports conditional readiness until source evidence is linked', async () => {
+      const conditional = await api()
+        .get(`${base()}/${id}/readiness`)
+        .set('Authorization', auth())
+        .expect(200);
+      expect(requirementReadinessSchema.parse(conditional.body)).toMatchObject({
+        requirementId: id,
+        requirementVersion: 1,
+        status: 'CONDITIONAL',
+        evidenceCount: 0,
+        unresolvedBlockingQuestionCount: 0,
+      });
+      const projectBase = `/api/v1/workspaces/${context().workspaceId}/projects/${context().projectId}`;
+      const source = await api()
+        .post(`${projectBase}/sources`)
+        .set('Authorization', auth())
+        .send({
+          title: 'Readiness evidence',
+          type: 'MANUAL_INPUT',
+          content: 'Confirmed requirement evidence.',
+        })
+        .expect(201);
+      await api()
+        .post(`${base()}/${id}/evidence`)
+        .set('Authorization', auth())
+        .send({ segmentId: source.body.segments[0].id, expectedVersion: 1 })
+        .expect(201);
+      const ready = await api()
+        .get(`${base()}/${id}/readiness`)
+        .set('Authorization', auth())
+        .expect(200);
+      expect(requirementReadinessSchema.parse(ready.body)).toMatchObject({
+        status: 'READY',
+        evidenceCount: 1,
+        unresolvedBlockingQuestionCount: 0,
+      });
+      expect(ready.body.checks.every((check: { passed: boolean }) => check.passed))
+        .toBe(true);
+    });
+
     it('requires linked blocking questions to be closed before review', async () => {
       const requirement = await api()
         .post(base())
@@ -105,6 +149,15 @@ export function requirementLifecycleChecks(
         })
         .expect(201);
 
+      const notReady = await api()
+        .get(`${base()}/${requirement.body.id}/readiness`)
+        .set('Authorization', auth())
+        .expect(200);
+      expect(requirementReadinessSchema.parse(notReady.body)).toMatchObject({
+        status: 'NOT_READY',
+        unresolvedBlockingQuestionCount: 1,
+      });
+
       await api()
         .post(`${base()}/${requirement.body.id}/ready-for-review`)
         .set('Authorization', auth())
@@ -127,6 +180,14 @@ export function requirementLifecycleChecks(
           expectedVersion: 1,
         })
         .expect(200);
+      const afterAnswer = await api()
+        .get(`${base()}/${requirement.body.id}/readiness`)
+        .set('Authorization', auth())
+        .expect(200);
+      expect(requirementReadinessSchema.parse(afterAnswer.body)).toMatchObject({
+        status: 'NOT_READY',
+        unresolvedBlockingQuestionCount: 1,
+      });
       await api()
         .post(`${base()}/${requirement.body.id}/ready-for-review`)
         .set('Authorization', auth())
@@ -143,6 +204,16 @@ export function requirementLifecycleChecks(
           expectedVersion: 2,
         })
         .expect(200);
+      const afterResolution = await api()
+        .get(`${base()}/${requirement.body.id}/readiness`)
+        .set('Authorization', auth())
+        .expect(200);
+      expect(
+        requirementReadinessSchema.parse(afterResolution.body),
+      ).toMatchObject({
+        status: 'CONDITIONAL',
+        unresolvedBlockingQuestionCount: 0,
+      });
       await api()
         .post(`${base()}/${requirement.body.id}/ready-for-review`)
         .set('Authorization', auth())
@@ -174,6 +245,10 @@ export function requirementLifecycleChecks(
           .set('Authorization', auth())
           .send({ expectedVersion: 1 })
           .expect(404);
+      await api()
+        .get(`${foreign}/readiness`)
+        .set('Authorization', auth())
+        .expect(404);
     });
 
     it('permits one concurrent transition and records one snapshot', async () => {
