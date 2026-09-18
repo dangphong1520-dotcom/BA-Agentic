@@ -24,6 +24,9 @@ clarification questions, classifications, and exact source references. The
 proposal remains separate from confirmed knowledge until SPEC-002 adds the
 review and acceptance flow.
 
+Implemented in [Sprint 10](SPRINT-10-SOURCE-ANALYSIS.md) with a local,
+provider-neutral analysis profile and governed persisted results.
+
 ## Exit criteria
 
 - Product, architecture, and repository instructions point to MVP v0.1.

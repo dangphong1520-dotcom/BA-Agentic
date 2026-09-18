@@ -16,6 +16,7 @@ import { questionChecks } from './questions.checks.js';
 import { businessRuleChecks } from './business-rules.checks.js';
 import { decisionChecks } from './decisions.checks.js';
 import { requirementLifecycleChecks } from './requirement-lifecycle.checks.js';
+import { sourceAnalysisChecks } from './source-analyses.checks.js';
 
 describe('Workspace and Project persistence', () => {
   let db: PGlite;
@@ -575,6 +576,21 @@ describe('Workspace and Project persistence', () => {
       app,
       token,
       userId,
+      workspaceId,
+      projectId,
+      foreignWorkspace,
+      foreignProject,
+    }),
+    async () => {
+      await app.close();
+      app = await boot();
+    },
+  );
+
+  sourceAnalysisChecks(
+    () => ({
+      app,
+      token,
       workspaceId,
       projectId,
       foreignWorkspace,

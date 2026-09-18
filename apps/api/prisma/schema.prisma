@@ -27,6 +27,7 @@ model User {
   decisionsCreated      Decision[]            @relation("DecisionCreator")
   decisionsMade         Decision[]            @relation("DecisionMaker")
   decisionVersions      DecisionVersion[]
+  sourceAnalyses        SourceAnalysis[]
 }
 
 model Workspace {
@@ -49,21 +50,22 @@ model WorkspaceMember {
 }
 
 model Project {
-  id            String          @id @default(uuid()) @db.Uuid
-  workspaceId   String          @db.Uuid
-  name          String          @db.VarChar(120)
-  description   String          @default("") @db.VarChar(4000)
-  businessGoal  String          @default("") @db.VarChar(4000)
-  version       Int             @default(1)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  workspace     Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
-  members       ProjectMember[]
-  requirements  Requirement[]
-  sources       Source[]
-  questions     Question[]
-  businessRules BusinessRule[]
-  decisions     Decision[]
+  id             String           @id @default(uuid()) @db.Uuid
+  workspaceId    String           @db.Uuid
+  name           String           @db.VarChar(120)
+  description    String           @default("") @db.VarChar(4000)
+  businessGoal   String           @default("") @db.VarChar(4000)
+  version        Int              @default(1)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  workspace      Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  members        ProjectMember[]
+  requirements   Requirement[]
+  sources        Source[]
+  questions      Question[]
+  businessRules  BusinessRule[]
+  decisions      Decision[]
+  sourceAnalyses SourceAnalysis[]
 
   @@unique([workspaceId, id])
 }
@@ -162,18 +164,19 @@ enum SourceType {
 }
 
 model Source {
-  id          String          @id @default(uuid()) @db.Uuid
-  workspaceId String          @db.Uuid
-  projectId   String          @db.Uuid
-  project     Project         @relation(fields: [workspaceId, projectId], references: [workspaceId, id], onDelete: Restrict)
-  title       String          @db.VarChar(120)
+  id          String           @id @default(uuid()) @db.Uuid
+  workspaceId String           @db.Uuid
+  projectId   String           @db.Uuid
+  project     Project          @relation(fields: [workspaceId, projectId], references: [workspaceId, id], onDelete: Restrict)
+  title       String           @db.VarChar(120)
   type        SourceType
-  content     String          @db.Text
-  revision    Int             @default(1)
-  createdBy   String          @db.Uuid
-  creator     User            @relation(fields: [createdBy], references: [id], onDelete: Restrict)
-  createdAt   DateTime        @default(now())
+  content     String           @db.Text
+  revision    Int              @default(1)
+  createdBy   String           @db.Uuid
+  creator     User             @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt   DateTime         @default(now())
   segments    SourceSegment[]
+  analyses    SourceAnalysis[]
 
   @@unique([projectId, id])
   @@index([workspaceId, projectId, createdAt, id])
@@ -192,6 +195,34 @@ model SourceSegment {
 
   @@unique([projectId, id])
   @@unique([sourceId, line])
+}
+
+enum SourceAnalysisStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model SourceAnalysis {
+  id             String               @id @default(uuid()) @db.Uuid
+  workspaceId    String               @db.Uuid
+  projectId      String               @db.Uuid
+  project        Project              @relation(fields: [workspaceId, projectId], references: [workspaceId, id], onDelete: Restrict)
+  sourceId       String               @db.Uuid
+  source         Source               @relation(fields: [projectId, sourceId], references: [projectId, id], onDelete: Restrict)
+  sourceRevision Int
+  status         SourceAnalysisStatus @default(RUNNING)
+  schemaVersion  Int                  @default(1)
+  modelProfile   String               @db.VarChar(80)
+  requestedBy    String               @db.Uuid
+  requester      User                 @relation(fields: [requestedBy], references: [id], onDelete: Restrict)
+  result         Json?
+  errorCode      String?              @db.VarChar(80)
+  errorMessage   String?              @db.VarChar(500)
+  createdAt      DateTime             @default(now())
+  completedAt    DateTime?
+
+  @@index([workspaceId, projectId, sourceId, createdAt, id])
 }
 
 model RequirementEvidence {

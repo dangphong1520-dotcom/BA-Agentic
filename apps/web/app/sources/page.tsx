@@ -3,9 +3,11 @@ import {
   entityIdSchema,
   projectDtoSchema,
   sourceDtoSchema,
+  sourceAnalysisDtoSchema,
 } from "@ba/contracts";
 import { ApiError, apiRequest } from "@/lib/api";
 import { SourceForm } from "./forms";
+import { SourceAnalysisPanel } from "./analysis";
 export const dynamic = "force-dynamic";
 export default async function Sources({
   searchParams,
@@ -15,6 +17,7 @@ export default async function Sources({
     project?: string;
     id?: string;
     view?: string;
+    analyzed?: string;
   }>;
 }) {
   const q = await searchParams;
@@ -43,7 +46,13 @@ export default async function Sources({
     const source = q.id
       ? await apiRequest(`${apiBase}/sources/${q.id}`, sourceDtoSchema)
       : undefined;
-    data = { currentProject, sources, source };
+    const analyses = source
+      ? await apiRequest(
+          `${apiBase}/sources/${source.id}/analyses`,
+          sourceAnalysisDtoSchema.array(),
+        )
+      : [];
+    data = { currentProject, sources, source, analyses };
   } catch (error) {
     return (
       <main>
@@ -57,7 +66,7 @@ export default async function Sources({
       </main>
     );
   }
-  const { currentProject, sources, source } = data;
+  const { currentProject, sources, source, analyses } = data;
   return (
     <div className="requirements-shell">
       <header className="topbar">
@@ -92,25 +101,38 @@ export default async function Sources({
             + Thêm nguồn
           </Link>
         </section>
+        {q.analyzed && (
+          <p className="success-message" role="status">
+            Đã lưu kết quả phân tích để bạn xem xét.
+          </p>
+        )}
         {source ? (
-          <section className="panel">
-            <p className="eyebrow">BẢN NGUỒN 1 · NỘI DUNG ĐƯỢC GIỮ NGUYÊN</p>
-            <details>
-              <summary>Xem toàn bộ văn bản gốc</summary>
-              <pre className="preserve-lines">{source.content}</pre>
-            </details>
-            <h2>Các đoạn nguồn</h2>
-            {source.segments.map((segment) => (
-              <article
-                key={segment.id}
-                id={`segment-${segment.id}`}
-                className="source-segment"
-              >
-                <strong>Dòng {segment.line}</strong>
-                <p className="preserve-lines">{segment.text}</p>
-              </article>
-            ))}
-          </section>
+          <>
+            <section className="panel">
+              <p className="eyebrow">BẢN NGUỒN 1 · NỘI DUNG ĐƯỢC GIỮ NGUYÊN</p>
+              <details>
+                <summary>Xem toàn bộ văn bản gốc</summary>
+                <pre className="preserve-lines">{source.content}</pre>
+              </details>
+              <h2>Các đoạn nguồn</h2>
+              {source.segments.map((segment) => (
+                <article
+                  key={segment.id}
+                  id={`segment-${segment.id}`}
+                  className="source-segment"
+                >
+                  <strong>Dòng {segment.line}</strong>
+                  <p className="preserve-lines">{segment.text}</p>
+                </article>
+              ))}
+            </section>
+            <SourceAnalysisPanel
+              workspaceId={workspace.data}
+              projectId={project.data}
+              source={source}
+              analyses={analyses}
+            />
+          </>
         ) : q.view === "new" ? (
           <SourceForm workspaceId={workspace.data} projectId={project.data} />
         ) : sources.length ? (

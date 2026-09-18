@@ -5,11 +5,13 @@ import {
   entityIdSchema,
   linkEvidenceSchema,
   evidenceDtoSchema,
+  sourceAnalysisDtoSchema,
 } from "@ba/contracts";
 import { apiRequest, ApiError } from "@/lib/api";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 export type SourceFormState = { error?: string; success?: string };
+export type AnalysisFormState = { error?: string };
 export async function saveSource(
   _previous: SourceFormState,
   form: FormData,
@@ -43,6 +45,35 @@ export async function saveSource(
   revalidatePath("/sources");
   redirect(
     `/sources?workspace=${workspace.data}&project=${project.data}&id=${id}`,
+  );
+}
+
+export async function analyzeSource(
+  _previous: AnalysisFormState,
+  form: FormData,
+): Promise<AnalysisFormState> {
+  const workspace = entityIdSchema.safeParse(form.get("workspaceId"));
+  const project = entityIdSchema.safeParse(form.get("projectId"));
+  const source = entityIdSchema.safeParse(form.get("sourceId"));
+  if (!workspace.success || !project.success || !source.success)
+    return { error: "Nguồn hoặc dự án chưa hợp lệ." };
+  try {
+    await apiRequest(
+      `/workspaces/${workspace.data}/projects/${project.data}/sources/${source.data}/analyses`,
+      sourceAnalysisDtoSchema,
+      { method: "POST", body: {} },
+    );
+  } catch (error) {
+    return {
+      error:
+        error instanceof ApiError
+          ? error.message
+          : "Chưa phân tích được nguồn.",
+    };
+  }
+  revalidatePath("/sources");
+  redirect(
+    `/sources?workspace=${workspace.data}&project=${project.data}&id=${source.data}&analyzed=1`,
   );
 }
 export async function attachEvidence(

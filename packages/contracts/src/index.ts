@@ -1,6 +1,7 @@
 import { z } from "zod";
 export * from "./requirements.js";
 export * from "./sources.js";
+export * from "./source-analyses.js";
 export * from "./questions.js";
 export * from "./business-rules.js";
 export * from "./decisions.js";
