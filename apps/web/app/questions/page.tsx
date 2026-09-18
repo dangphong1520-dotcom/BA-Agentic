@@ -3,6 +3,7 @@ import {
   entityIdSchema,
   projectDtoSchema,
   questionDtoSchema,
+  questionFieldsSchema,
   questionVersionSchema,
   requirementDtoSchema,
   questionStatusSchema,
@@ -24,9 +25,13 @@ export default async function Questions({
     status?: string;
     blocking?: string;
     saved?: string;
+    question?: string;
   }>;
 }) {
   const q = await searchParams;
+  const initialQuestion = questionFieldsSchema.shape.question.safeParse(
+    q.question,
+  );
   const workspace = entityIdSchema.safeParse(q.workspace),
     project = entityIdSchema.safeParse(q.project);
   if (
@@ -129,6 +134,9 @@ export default async function Questions({
                 question={selected}
                 requirements={requirements}
                 requirementId={q.requirement}
+                initialQuestion={
+                  initialQuestion.success ? initialQuestion.data : undefined
+                }
               />
               {selected?.requirementId && (
                 <Link

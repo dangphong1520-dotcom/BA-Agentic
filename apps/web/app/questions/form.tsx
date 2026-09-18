@@ -14,16 +14,18 @@ export function QuestionForm({
   question,
   requirements,
   requirementId,
+  initialQuestion,
 }: {
   workspaceId: string;
   projectId: string;
   question?: QuestionDto;
   requirements: RequirementDto[];
   requirementId?: string;
+  initialQuestion?: string;
 }) {
   const [state, action, pending] = useActionState(saveQuestion, {});
   const [fields, setFields] = useState({
-    question: question?.question ?? "",
+    question: question?.question ?? initialQuestion ?? "",
     category: question?.category ?? "BUSINESS",
     priority: question?.priority ?? "MEDIUM",
     blocking: question?.blocking ?? false,

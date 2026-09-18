@@ -224,6 +224,15 @@ export function SourceAnalysisPanel({
                 <article key={index}>
                   <strong>{question.question}</strong>
                   <p>{question.reason}</p>
+                  {run.reviewStatus === "ACCEPTED" &&
+                    run.acceptedRequirementId && (
+                      <Link
+                        className="button secondary"
+                        href={`/questions?workspace=${workspaceId}&project=${projectId}&view=new&requirement=${run.acceptedRequirementId}&question=${encodeURIComponent(question.question)}`}
+                      >
+                        Tạo câu hỏi này
+                      </Link>
+                    )}
                 </article>
               ))}
               <h3>Bằng chứng nguồn</h3>

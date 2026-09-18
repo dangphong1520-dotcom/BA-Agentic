@@ -64,6 +64,13 @@ Result: observations, completion time, useful and unhelpful outputs, blockers,
 and the next product change are recorded. Infrastructure work can follow only
 when this evidence identifies a need.
 
+Status: completed in the first controlled local validation on 18 September
+2026. The measured journey took 1 minute 32 seconds. Evidence identified one
+workflow interruption: transferring a proposed clarification question into the
+Questions module. The resulting change pre-fills a governed question draft and
+its accepted requirement while preserving explicit BA submission. See
+`docs/validation/MVP_V0_1_VALIDATION_001.md`.
+
 ## Runtime for v0.1
 
 ```text
