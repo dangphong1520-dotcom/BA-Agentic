@@ -35,6 +35,25 @@ export class RequirementRepository {
     });
   }
 
+  async hasUnresolvedBlockingQuestions(
+    workspaceId: string,
+    projectId: string,
+    requirementId: string,
+  ) {
+    return Boolean(
+      await this.database.db.question.findFirst({
+        where: {
+          workspaceId,
+          projectId,
+          requirementId,
+          blocking: true,
+          status: { not: 'CLOSED' },
+        },
+        select: { id: true },
+      }),
+    );
+  }
+
   private snapshot(
     row: NonNullable<Awaited<ReturnType<RequirementRepository['get']>>>,
   ) {
@@ -128,6 +147,13 @@ export class RequirementRepository {
           status: { in: from },
           version: expectedVersion,
           project: { members: { some: { userId } } },
+          ...(to === 'READY_FOR_REVIEW'
+            ? {
+                questions: {
+                  none: { blocking: true, status: { not: 'CLOSED' } },
+                },
+              }
+            : {}),
         },
         data: {
           status: to,

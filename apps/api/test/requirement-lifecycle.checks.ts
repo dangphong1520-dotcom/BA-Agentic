@@ -76,6 +76,86 @@ export function requirementLifecycleChecks(
       });
     });
 
+    it('requires linked blocking questions to be closed before review', async () => {
+      const requirement = await api()
+        .post(base())
+        .set('Authorization', auth())
+        .send({ ...fields, title: 'Requirement with a blocker' })
+        .expect(201);
+      const questionBase = `/api/v1/workspaces/${context().workspaceId}/projects/${context().projectId}/questions`;
+      const questionFields = {
+        question: 'When must the invoice be available?',
+        category: 'BUSINESS',
+        priority: 'HIGH',
+        stakeholder: 'Accounting',
+        requirementId: requirement.body.id,
+      };
+      const blocker = await api()
+        .post(questionBase)
+        .set('Authorization', auth())
+        .send({ ...questionFields, blocking: true })
+        .expect(201);
+      await api()
+        .post(questionBase)
+        .set('Authorization', auth())
+        .send({
+          ...questionFields,
+          question: 'Who should receive a notification?',
+          blocking: false,
+        })
+        .expect(201);
+
+      await api()
+        .post(`${base()}/${requirement.body.id}/ready-for-review`)
+        .set('Authorization', auth())
+        .send({ expectedVersion: 1 })
+        .expect(422);
+      const unchangedHistory = await api()
+        .get(`${base()}/${requirement.body.id}/versions`)
+        .set('Authorization', auth())
+        .expect(200);
+      expect(unchangedHistory.body).toHaveLength(1);
+
+      await api()
+        .patch(`${questionBase}/${blocker.body.id}`)
+        .set('Authorization', auth())
+        .send({
+          ...questionFields,
+          blocking: true,
+          answer: 'Within 24 hours.',
+          status: 'ANSWERED',
+          expectedVersion: 1,
+        })
+        .expect(200);
+      await api()
+        .post(`${base()}/${requirement.body.id}/ready-for-review`)
+        .set('Authorization', auth())
+        .send({ expectedVersion: 1 })
+        .expect(422);
+      await api()
+        .patch(`${questionBase}/${blocker.body.id}`)
+        .set('Authorization', auth())
+        .send({
+          ...questionFields,
+          blocking: true,
+          answer: 'Within 24 hours.',
+          status: 'CLOSED',
+          expectedVersion: 2,
+        })
+        .expect(200);
+      await api()
+        .post(`${base()}/${requirement.body.id}/ready-for-review`)
+        .set('Authorization', auth())
+        .send({ expectedVersion: 1 })
+        .expect(201)
+        .expect(({ body }) =>
+          expect(body).toMatchObject({
+            status: 'READY_FOR_REVIEW',
+            version: 2,
+          }),
+        );
+    });
+
     it('isolates lifecycle commands by authentication and project scope', async () => {
       await api()
         .post(`${base()}/${id}/ready-for-review`)

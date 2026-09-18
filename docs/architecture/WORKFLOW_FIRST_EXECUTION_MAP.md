@@ -71,6 +71,16 @@ Questions module. The resulting change pre-fills a governed question draft and
 its accepted requirement while preserving explicit BA submission. See
 `docs/validation/MVP_V0_1_VALIDATION_001.md`.
 
+### SPEC-004 — Resolve blocking questions before review
+
+Trigger: the BA sends a requirement for review after clarification work.
+
+Result: unresolved blocking questions keep the requirement editable and direct
+the BA to the exact work that remains. Once each blocker is explicitly closed,
+the governed review transition can proceed. This gate was identified by the
+SPEC-003 journey and validated through API integration and the local UI. See
+`docs/specs/SPEC-004-BLOCKING-QUESTIONS.md`.
+
 ## Runtime for v0.1
 
 ```text

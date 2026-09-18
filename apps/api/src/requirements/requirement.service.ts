@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import {
   requirementDtoSchema,
@@ -119,6 +120,17 @@ export class RequirementService {
     )
       throw new ConflictException(
         'Description and acceptance criteria are required for review',
+      );
+    if (
+      to === 'READY_FOR_REVIEW' &&
+      (await this.repository.hasUnresolvedBlockingQuestions(
+        workspace,
+        project,
+        id,
+      ))
+    )
+      throw new UnprocessableEntityException(
+        'Close blocking questions before review',
       );
     const row = await this.repository.transition(
       user,

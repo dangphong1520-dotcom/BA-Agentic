@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import type { RequirementDto } from "@ba/contracts";
 import { transitionRequirement } from "./actions";
 import { statusLabels } from "./labels";
@@ -92,7 +93,14 @@ export function RequirementLifecycle({
       )}
       {state.error && (
         <p className="error-panel" role="alert">
-          {state.error}
+          {state.error}{" "}
+          {state.blockedByQuestions && (
+            <Link
+              href={`/questions?workspace=${workspaceId}&project=${projectId}&requirement=${requirement.id}&blocking=1`}
+            >
+              Mở câu hỏi đang chặn →
+            </Link>
+          )}
         </p>
       )}
     </form>

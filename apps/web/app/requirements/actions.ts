@@ -10,7 +10,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ApiError, apiRequest } from "@/lib/api";
 export type RequirementFormState = { error?: string; conflict?: boolean };
-export type RequirementTransitionState = { error?: string };
+export type RequirementTransitionState = {
+  error?: string;
+  blockedByQuestions?: boolean;
+};
 export async function saveRequirement(
   _previous: RequirementFormState,
   form: FormData,
@@ -113,6 +116,12 @@ export async function transitionRequirement(
       { method: "POST", body: input.data },
     );
   } catch (error) {
+    if (error instanceof ApiError && error.status === 422)
+      return {
+        error:
+          "Yêu cầu còn câu hỏi đang chặn công việc. Hãy đóng các câu hỏi đó trước khi gửi phê duyệt.",
+        blockedByQuestions: true,
+      };
     return error instanceof ApiError
       ? {
           error:
