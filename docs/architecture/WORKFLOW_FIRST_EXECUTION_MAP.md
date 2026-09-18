@@ -1,0 +1,89 @@
+# Workflow-first execution map
+
+## Decision boundary
+
+The target architecture remains useful as a direction. It no longer determines
+build order. Product workflow evidence determines build order.
+
+```text
+AGENTS.md
+    ↓
+MVP v0.1 journey
+    ↓
+SPEC-001: Source-to-requirement analysis
+    ↓
+Codex plan → build → run → test → review
+    ↓
+BA validation session
+    ↓
+iterate or productionize
+```
+
+## Repository audit
+
+| Area                                               | Decision          | Reason and next treatment                                                                           |
+| -------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------- |
+| Product principles and governance                  | KEEP              | Human approval, uncertainty, evidence, and history are product differentiators.                     |
+| Next.js Web and NestJS API                         | KEEP              | They already support the local vertical slice.                                                      |
+| PostgreSQL and Prisma                              | KEEP              | Existing structured knowledge, versions, and relationships need durable transactions.               |
+| Workspace and Project                              | KEEP              | They provide the minimum context boundary.                                                          |
+| Source and source segments                         | KEEP              | They are the entry point and evidence layer for v0.1.                                               |
+| Requirement drafts and lifecycle                   | KEEP              | They are the reviewed output and human gate.                                                        |
+| Questions                                          | KEEP              | They expose unknown information instead of allowing guesses.                                        |
+| Business Rules and Decisions                       | KEEP, LIMIT       | Preserve working governance; build no new breadth until the source-to-requirement flow needs it.    |
+| UI navigation and product language                 | REFACTOR          | Make the v0.1 journey the primary path and move supporting registers behind it.                     |
+| AI architecture documents                          | REFACTOR          | Reduce the first implementation to one deterministic analysis workflow and one structured contract. |
+| Worker scaffold                                    | FREEZE            | No product behavior uses it yet; a synchronous local run is enough to validate the first scenario.  |
+| Redis, BullMQ, pgvector, S3, SSE                   | FREEZE            | Add only when measured latency, reliability, retrieval, or file size requires them.                 |
+| Broad module roadmap                               | FREEZE            | Keep as backlog context without treating it as sprint order.                                        |
+| Generated junk, duplicate rules, dead placeholders | REMOVE WHEN FOUND | Remove only with evidence and focused changes; no rewrite campaign.                                 |
+
+## Vertical-slice implementation order
+
+### SPEC-001 — Analyze a source
+
+Trigger: the BA selects **Analyze source** on stored raw text.
+
+Result: one persisted analysis run contains a schema-valid requirement proposal,
+findings, questions, classifications, source-segment references, and the source
+revision used.
+
+### SPEC-002 — Review a proposal
+
+Trigger: the BA opens the completed analysis.
+
+Result: the BA can inspect evidence, edit fields, reject the proposal, or accept
+it once as a DRAFT requirement. The backend owns permissions, references,
+version checks, and idempotency.
+
+### SPEC-003 — Validate the BA journey
+
+Trigger: a BA tests a realistic input from start to approved requirement.
+
+Result: observations, completion time, useful and unhelpful outputs, blockers,
+and the next product change are recorded. Infrastructure work can follow only
+when this evidence identifies a need.
+
+## Runtime for v0.1
+
+```text
+Browser → Next.js → NestJS application service → PostgreSQL
+                         │
+                         └→ one model gateway call
+```
+
+The first implementation may execute the model call synchronously with an
+explicit timeout and persisted RUNNING / COMPLETED / FAILED state. Move it to
+the Worker only after local validation shows that request duration or recovery
+requires background execution. Domain validation remains in the API service in
+either design.
+
+## Definition of done for each Codex task
+
+- The task names one user trigger and one observable result.
+- Acceptance criteria are written before implementation.
+- The smallest complete vertical change is built.
+- Contracts, server governance, and UI behavior agree.
+- Relevant automated checks pass.
+- The changed journey is exercised through the local UI.
+- The outcome and product-learning question are documented.

@@ -690,6 +690,33 @@ Avoid adding:
 
 unless explicitly requested later.
 
+### Current delivery mode
+
+The active baseline is workflow-first delivery:
+
+Problem
+-> BA workflow
+-> Small specification
+-> Codex task
+-> Working vertical slice
+-> BA validation
+-> Iterate
+-> Productionize only after validation
+
+Do not select work merely because it appears next in the target architecture.
+Each sprint must improve the validated MVP v0.1 journey documented in
+`docs/product/MVP_V0_1.md` or remove a blocker to that journey.
+
+Keep the existing modular monolith, PostgreSQL, API, and Web applications.
+Freeze new Worker, Redis/BullMQ, pgvector, object-storage, multi-agent,
+enterprise-authentication, and deployment work until the vertical slice proves
+that it needs them. A frozen component may remain in the repository; do not
+expand it without a measured workflow need.
+
+For each substantial product change, define the user trigger, observable
+before/after behavior, acceptance criteria, and validation route before coding.
+Prefer one end-to-end slice over several disconnected modules.
+
 ---
 
 ## 29. Before Coding

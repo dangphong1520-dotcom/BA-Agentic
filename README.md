@@ -2,6 +2,12 @@
 
 AI-assisted operating system for IT Business Analysts.
 
+The active delivery strategy is workflow-first. We build and validate one
+complete BA journey before expanding infrastructure or module breadth. See the
+[MVP v0.1](docs/product/MVP_V0_1.md), [execution
+map](docs/architecture/WORKFLOW_FIRST_EXECUTION_MAP.md), and
+[ADR-003](docs/decisions/ADR-003-WORKFLOW-FIRST-DELIVERY.md).
+
 ## Vision
 
 Transform meetings, requirements, business rules, decisions,
@@ -39,8 +45,8 @@ Web typecheck generates Next.js route types before running TypeScript.
 Worker test/lint scripts remain placeholders, so a root test command must not
 be interpreted as full application coverage.
 
-See [the foundation checkpoint](docs/sprints/SPRINT-01-FOUNDATION.md) for current
-implementation status and the next feature slice.
+See [the workflow reset checkpoint](docs/sprints/SPRINT-09-WORKFLOW-FIRST-RESET.md)
+for current implementation status and the next feature slice.
 
 ## Workspace and Project APIs
 

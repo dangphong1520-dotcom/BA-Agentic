@@ -1,5 +1,10 @@
 ﻿# BA Agent Platform — MVP Scope
 
+> **Delivery note:** This document retains the broader MVP capability map. The
+> active build scope is the narrower [MVP v0.1 vertical
+> slice](MVP_V0_1.md). Capabilities outside that slice are backlog context, not
+> authorization to build them next.
+
 ## 1. MVP Objective
 
 The MVP must prove that an IT Business Analyst can use the platform to:
