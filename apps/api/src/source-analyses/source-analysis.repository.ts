@@ -1,5 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { SourceAnalysisResult } from '@ba/contracts';
+import {
+  requirementDtoSchema,
+  type SourceAnalysisResult,
+  type UpdateSourceProposal,
+} from '@ba/contracts';
 import { DatabaseService } from '../database/database.service.js';
 
 @Injectable()
@@ -69,6 +73,120 @@ export class SourceAnalysisRepository {
         projectId,
         project: { members: { some: { userId } } },
       },
+    });
+  }
+
+  updateProposal(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    id: string,
+    expectedVersion: number,
+    result: SourceAnalysisResult,
+  ) {
+    return this.database.db.sourceAnalysis.updateManyAndReturn({
+      where: {
+        id,
+        workspaceId,
+        projectId,
+        status: 'COMPLETED',
+        reviewStatus: 'PENDING',
+        version: expectedVersion,
+        project: { members: { some: { userId } } },
+      },
+      data: { result, version: { increment: 1 } },
+    });
+  }
+
+  reject(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    id: string,
+    expectedVersion: number,
+  ) {
+    return this.database.db.sourceAnalysis.updateManyAndReturn({
+      where: {
+        id,
+        workspaceId,
+        projectId,
+        status: 'COMPLETED',
+        reviewStatus: 'PENDING',
+        version: expectedVersion,
+        project: { members: { some: { userId } } },
+      },
+      data: {
+        reviewStatus: 'REJECTED',
+        reviewedBy: userId,
+        reviewedAt: new Date(),
+        version: { increment: 1 },
+      },
+    });
+  }
+
+  accept(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    id: string,
+    expectedVersion: number,
+    result: SourceAnalysisResult,
+    fields: Omit<UpdateSourceProposal, 'expectedVersion'>,
+  ) {
+    return this.database.db.$transaction(async (tx) => {
+      const [analysis] = await tx.sourceAnalysis.updateManyAndReturn({
+        where: {
+          id,
+          workspaceId,
+          projectId,
+          status: 'COMPLETED',
+          reviewStatus: 'PENDING',
+          version: expectedVersion,
+          project: { members: { some: { userId } } },
+        },
+        data: {
+          reviewStatus: 'ACCEPTED',
+          reviewedBy: userId,
+          reviewedAt: new Date(),
+          version: { increment: 1 },
+        },
+      });
+      if (!analysis) return null;
+      const requirement = await tx.requirement.create({
+        data: { ...fields, workspaceId, projectId, createdBy: userId },
+      });
+      const snapshot = requirementDtoSchema.parse({
+        ...requirement,
+        approvedAt: null,
+        baselinedAt: null,
+        createdAt: requirement.createdAt.toISOString(),
+        updatedAt: requirement.updatedAt.toISOString(),
+      });
+      await tx.requirementVersion.create({
+        data: {
+          requirementId: requirement.id,
+          version: requirement.version,
+          changedBy: userId,
+          snapshot,
+        },
+      });
+      const evidenceSegmentIds = [
+        ...new Set(result.requirement.evidenceSegmentIds),
+      ];
+      if (evidenceSegmentIds.length)
+        await tx.requirementEvidence.createMany({
+          data: evidenceSegmentIds.map((segmentId) => ({
+            projectId,
+            requirementId: requirement.id,
+            requirementVersion: requirement.version,
+            segmentId,
+            createdBy: userId,
+          })),
+        });
+      return tx.sourceAnalysis.update({
+        where: { id },
+        data: { acceptedRequirementId: requirement.id },
+      });
     });
   }
 }

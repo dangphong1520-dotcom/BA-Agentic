@@ -1,15 +1,21 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   Inject,
   Param,
+  Patch,
   Post,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { entityIdSchema } from '@ba/contracts';
+import {
+  entityIdSchema,
+  sourceProposalTransitionSchema,
+  updateSourceProposalSchema,
+} from '@ba/contracts';
 import { DevelopmentAuthGuard } from '../auth/development-auth.guard.js';
 import { SourceAnalysisService } from './source-analysis.service.js';
 
@@ -22,6 +28,10 @@ type Params = {
 const id = (value: string) => {
   const parsed = entityIdSchema.safeParse(value);
   if (!parsed.success) throw new BadRequestException('Invalid identifier');
+  return parsed.data;
+};
+const payload = <T>(parsed: { success: true; data: T } | { success: false }) => {
+  if (!parsed.success) throw new BadRequestException('Invalid request body');
   return parsed.data;
 };
 @Controller('workspaces/:workspaceId/projects/:projectId')
@@ -62,6 +72,48 @@ export class SourceAnalysisController {
       id(p.workspaceId),
       id(p.projectId),
       id(p.id),
+    );
+  }
+  @Patch('source-analyses/:id/proposal') updateProposal(
+    @Res({ passthrough: true }) res: Response<unknown, { userId: string }>,
+    @Param() p: Params,
+    @Body() body: unknown,
+  ) {
+    const data = payload(updateSourceProposalSchema.safeParse(body));
+    return this.service.updateProposal(
+      res.locals.userId,
+      id(p.workspaceId),
+      id(p.projectId),
+      id(p.id),
+      data,
+    );
+  }
+  @Post('source-analyses/:id/reject') reject(
+    @Res({ passthrough: true }) res: Response<unknown, { userId: string }>,
+    @Param() p: Params,
+    @Body() body: unknown,
+  ) {
+    const data = payload(sourceProposalTransitionSchema.safeParse(body));
+    return this.service.reject(
+      res.locals.userId,
+      id(p.workspaceId),
+      id(p.projectId),
+      id(p.id),
+      data.expectedVersion,
+    );
+  }
+  @Post('source-analyses/:id/accept') accept(
+    @Res({ passthrough: true }) res: Response<unknown, { userId: string }>,
+    @Param() p: Params,
+    @Body() body: unknown,
+  ) {
+    const data = payload(sourceProposalTransitionSchema.safeParse(body));
+    return this.service.accept(
+      res.locals.userId,
+      id(p.workspaceId),
+      id(p.projectId),
+      id(p.id),
+      data.expectedVersion,
     );
   }
 }

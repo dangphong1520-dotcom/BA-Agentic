@@ -6,12 +6,15 @@ import {
   linkEvidenceSchema,
   evidenceDtoSchema,
   sourceAnalysisDtoSchema,
+  sourceProposalTransitionSchema,
+  updateSourceProposalSchema,
 } from "@ba/contracts";
 import { apiRequest, ApiError } from "@/lib/api";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 export type SourceFormState = { error?: string; success?: string };
 export type AnalysisFormState = { error?: string };
+export type ProposalFormState = { error?: string; success?: string };
 export async function saveSource(
   _previous: SourceFormState,
   form: FormData,
@@ -74,6 +77,111 @@ export async function analyzeSource(
   revalidatePath("/sources");
   redirect(
     `/sources?workspace=${workspace.data}&project=${project.data}&id=${source.data}&analyzed=1`,
+  );
+}
+
+const proposalContext = (form: FormData) => ({
+  workspace: entityIdSchema.safeParse(form.get("workspaceId")),
+  project: entityIdSchema.safeParse(form.get("projectId")),
+  source: entityIdSchema.safeParse(form.get("sourceId")),
+  analysis: entityIdSchema.safeParse(form.get("analysisId")),
+});
+
+export async function saveSourceProposal(
+  _previous: ProposalFormState,
+  form: FormData,
+): Promise<ProposalFormState> {
+  const context = proposalContext(form);
+  const data = updateSourceProposalSchema.safeParse({
+    expectedVersion: Number(form.get("expectedVersion")),
+    title: form.get("title"),
+    type: form.get("type"),
+    priority: form.get("priority"),
+    description: form.get("description"),
+    businessGoal: form.get("businessGoal"),
+    actor: form.get("actor"),
+    preconditions: form.get("preconditions"),
+    mainFlow: form.get("mainFlow"),
+    exceptionFlow: form.get("exceptionFlow"),
+    acceptanceCriteria: form.get("acceptanceCriteria"),
+    sourceNote: form.get("sourceNote"),
+  });
+  if (
+    !context.workspace.success ||
+    !context.project.success ||
+    !context.source.success ||
+    !context.analysis.success ||
+    !data.success
+  )
+    return { error: "Kiểm tra lại nội dung đề xuất." };
+  try {
+    await apiRequest(
+      `/workspaces/${context.workspace.data}/projects/${context.project.data}/source-analyses/${context.analysis.data}/proposal`,
+      sourceAnalysisDtoSchema,
+      { method: "PATCH", body: data.data },
+    );
+  } catch (error) {
+    return {
+      error:
+        error instanceof ApiError && error.status === 409
+          ? "Đề xuất đã thay đổi. Tải lại trang để xem bản mới nhất."
+          : "Chưa lưu được đề xuất.",
+    };
+  }
+  revalidatePath("/sources");
+  return { success: "Đã lưu nội dung BA chỉnh sửa." };
+}
+
+async function transitionProposal(form: FormData, transition: "accept" | "reject") {
+  const context = proposalContext(form);
+  const data = sourceProposalTransitionSchema.safeParse({
+    expectedVersion: Number(form.get("expectedVersion")),
+  });
+  if (
+    !context.workspace.success ||
+    !context.project.success ||
+    !context.source.success ||
+    !context.analysis.success ||
+    !data.success
+  )
+    return { error: "Đề xuất chưa hợp lệ." };
+  try {
+    const updated = await apiRequest(
+      `/workspaces/${context.workspace.data}/projects/${context.project.data}/source-analyses/${context.analysis.data}/${transition}`,
+      sourceAnalysisDtoSchema,
+      { method: "POST", body: data.data },
+    );
+    revalidatePath("/sources");
+    return { context, updated };
+  } catch (error) {
+    return {
+      error:
+        error instanceof ApiError && error.status === 409
+          ? "Đề xuất đã được xử lý hoặc có phiên bản mới."
+          : "Chưa xử lý được đề xuất.",
+    };
+  }
+}
+
+export async function rejectSourceProposal(
+  _previous: ProposalFormState,
+  form: FormData,
+): Promise<ProposalFormState> {
+  const result = await transitionProposal(form, "reject");
+  if ("error" in result) return { error: result.error };
+  return { success: "Đã từ chối đề xuất." };
+}
+
+export async function acceptSourceProposal(
+  _previous: ProposalFormState,
+  form: FormData,
+): Promise<ProposalFormState> {
+  const result = await transitionProposal(form, "accept");
+  if ("error" in result) return { error: result.error };
+  if (!result.updated.acceptedRequirementId)
+    return { error: "Chưa tạo được requirement." };
+  redirect(
+    `/requirements?workspace=${result.context.workspace.data}&project=${result.context.project.data}&id=${result.updated.acceptedRequirementId}&created=proposal`,
   );
 }
 export async function attachEvidence(

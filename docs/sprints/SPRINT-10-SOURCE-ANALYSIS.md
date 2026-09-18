@@ -38,8 +38,6 @@ analysis creates no project knowledge. The full repository typecheck, lint,
 unit tests, integration tests, and production build pass. The browser journey
 was verified by creating a source, running analysis, and reloading its result.
 
-## Next slice
+## Follow-up
 
-SPEC-002 will let the BA edit, reject, or accept a proposal exactly once as a
-DRAFT requirement. Acceptance will revalidate source references and protect
-against stale or repeated application.
+Sprint 11 implements SPEC-002: BA proposal review and governed acceptance.

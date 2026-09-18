@@ -28,6 +28,7 @@ model User {
   decisionsMade         Decision[]            @relation("DecisionMaker")
   decisionVersions      DecisionVersion[]
   sourceAnalyses        SourceAnalysis[]
+  sourceAnalysesReviewed SourceAnalysis[]       @relation("SourceAnalysisReviewer")
 }
 
 model Workspace {
@@ -125,6 +126,7 @@ model Requirement {
   questions          Question[]
   businessRuleLinks  BusinessRuleRequirement[]
   decisionLinks      DecisionRequirement[]
+  acceptedFromAnalysis SourceAnalysis?          @relation("AcceptedSourceProposal")
 
   @@unique([projectId, id])
   @@index([workspaceId, projectId, createdAt, id])
@@ -203,6 +205,12 @@ enum SourceAnalysisStatus {
   FAILED
 }
 
+enum SourceAnalysisReviewStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model SourceAnalysis {
   id             String               @id @default(uuid()) @db.Uuid
   workspaceId    String               @db.Uuid
@@ -212,6 +220,13 @@ model SourceAnalysis {
   source         Source               @relation(fields: [projectId, sourceId], references: [projectId, id], onDelete: Restrict)
   sourceRevision Int
   status         SourceAnalysisStatus @default(RUNNING)
+  version        Int                  @default(1)
+  reviewStatus   SourceAnalysisReviewStatus @default(PENDING)
+  reviewedBy     String?              @db.Uuid
+  reviewer       User?                @relation("SourceAnalysisReviewer", fields: [reviewedBy], references: [id], onDelete: Restrict)
+  reviewedAt     DateTime?
+  acceptedRequirementId String?       @unique @db.Uuid
+  acceptedRequirement Requirement?    @relation("AcceptedSourceProposal", fields: [projectId, acceptedRequirementId], references: [projectId, id], onDelete: Restrict)
   schemaVersion  Int                  @default(1)
   modelProfile   String               @db.VarChar(80)
   requestedBy    String               @db.Uuid
@@ -222,6 +237,7 @@ model SourceAnalysis {
   createdAt      DateTime             @default(now())
   completedAt    DateTime?
 
+  @@unique([projectId, acceptedRequirementId])
   @@index([workspaceId, projectId, sourceId, createdAt, id])
 }
 

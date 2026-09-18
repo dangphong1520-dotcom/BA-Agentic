@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -9,6 +10,7 @@ import {
   sourceAnalysisResultSchema,
   type SourceAnalysisDto,
   type SourceAnalysisResult,
+  type UpdateSourceProposal,
 } from '@ba/contracts';
 import { ProjectService } from '../projects/project.service.js';
 import { SourceService } from '../sources/source.service.js';
@@ -33,6 +35,7 @@ export class SourceAnalysisService {
       ...row,
       createdAt: row.createdAt.toISOString(),
       completedAt: row.completedAt?.toISOString() ?? null,
+      reviewedAt: row.reviewedAt?.toISOString() ?? null,
     });
   }
   private validate(result: SourceAnalysisResult, segmentIds: Set<string>) {
@@ -104,5 +107,108 @@ export class SourceAnalysisService {
     const row = await this.repository.get(user, workspace, project, id);
     if (!row) throw new NotFoundException('Source analysis not found');
     return this.dto(row);
+  }
+
+  private async reviewable(
+    user: string,
+    workspace: string,
+    project: string,
+    id: string,
+  ) {
+    const row = await this.repository.get(user, workspace, project, id);
+    if (!row) throw new NotFoundException('Source analysis not found');
+    if (row.status !== 'COMPLETED' || !row.result)
+      throw new ConflictException('Analysis is not ready for review');
+    const source = await this.sources.get(
+      user,
+      workspace,
+      project,
+      row.sourceId,
+    );
+    const result = this.validate(
+      sourceAnalysisResultSchema.parse(row.result),
+      new Set(source.segments.map((segment) => segment.id)),
+    );
+    return { row, result };
+  }
+
+  async updateProposal(
+    user: string,
+    workspace: string,
+    project: string,
+    id: string,
+    data: UpdateSourceProposal,
+  ) {
+    const { row, result } = await this.reviewable(
+      user,
+      workspace,
+      project,
+      id,
+    );
+    const { expectedVersion, ...fields } = data;
+    const [updated] = await this.repository.updateProposal(
+      user,
+      workspace,
+      project,
+      row.id,
+      expectedVersion,
+      { ...result, requirement: { ...result.requirement, ...fields } },
+    );
+    if (!updated)
+      throw new ConflictException('Proposal was already changed or reviewed');
+    return this.dto(updated);
+  }
+
+  async reject(
+    user: string,
+    workspace: string,
+    project: string,
+    id: string,
+    expectedVersion: number,
+  ) {
+    await this.reviewable(user, workspace, project, id);
+    const [updated] = await this.repository.reject(
+      user,
+      workspace,
+      project,
+      id,
+      expectedVersion,
+    );
+    if (!updated)
+      throw new ConflictException('Proposal was already changed or reviewed');
+    return this.dto(updated);
+  }
+
+  async accept(
+    user: string,
+    workspace: string,
+    project: string,
+    id: string,
+    expectedVersion: number,
+  ) {
+    const { result } = await this.reviewable(
+      user,
+      workspace,
+      project,
+      id,
+    );
+    const {
+      classification: _classification,
+      evidenceSegmentIds: _evidence,
+      confidence: _confidence,
+      ...fields
+    } = result.requirement;
+    const updated = await this.repository.accept(
+      user,
+      workspace,
+      project,
+      id,
+      expectedVersion,
+      result,
+      fields,
+    );
+    if (!updated)
+      throw new ConflictException('Proposal was already changed or reviewed');
+    return this.dto(updated);
   }
 }
