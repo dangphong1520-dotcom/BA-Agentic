@@ -8,6 +8,10 @@ complete BA journey before expanding infrastructure or module breadth. See the
 map](docs/architecture/WORKFLOW_FIRST_EXECUTION_MAP.md), and
 [ADR-003](docs/decisions/ADR-003-WORKFLOW-FIRST-DELIVERY.md).
 
+Use the [documentation map](docs/README.md) to find the authoritative context
+for a task. People working with Codex should start with [AGENTS.md](AGENTS.md)
+and the [Codex workflow guide](docs/guides/CODEX_WORKFLOW.md).
+
 ## Vision
 
 Transform meetings, requirements, business rules, decisions,
@@ -45,8 +49,10 @@ Web typecheck generates Next.js route types before running TypeScript.
 Worker test/lint scripts remain placeholders, so a root test command must not
 be interpreted as full application coverage.
 
-See [the workflow reset checkpoint](docs/sprints/SPRINT-09-WORKFLOW-FIRST-RESET.md)
-for current implementation status and the next feature slice.
+The repository currently records Sprints 01–17. The latest delivered product
+views are Findings Register, Traceability View, and Readiness Portfolio. See the
+[workflow execution map](docs/architecture/WORKFLOW_FIRST_EXECUTION_MAP.md) for
+the implemented vertical slices and the rule for choosing the next one.
 
 ## Workspace and Project APIs
 
@@ -58,4 +64,8 @@ explicitly enabled via local configuration and disabled in production.
 `pnpm dev` builds shared contracts and generates Prisma Client before starting
 the applications. Keep `apps/api/.env` private; `db:setup` creates it without
 overwriting an existing file. Project updates require `expectedVersion` to prevent
-lost edits. The UI and production login are still pending.
+lost edits. The local development UI uses an explicit development identity;
+production authentication remains outside the validated MVP scope.
+
+Detailed startup, Docker, and CI instructions live in
+[Local and CI](docs/guides/LOCAL_AND_CI.md).
