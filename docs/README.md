@@ -32,8 +32,9 @@ Raw source → analysis → proposal review → DRAFT requirement
            → clarification → readiness → human approval → traceable output
 ```
 
-Sprints 01–18 are recorded in `sprints/`. The latest delivered capability is
-Design Studio Preview for Flow, BPMN, and Prototype proposals.
+Sprints 01–21 are recorded in `sprints/`. Design Studio now persists and reviews
+versioned proposals, supports an optional structured AI gateway, and regenerates
+stale design after requirement changes.
 
 ## Document rules
 

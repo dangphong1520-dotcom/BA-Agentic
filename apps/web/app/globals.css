@@ -860,3 +860,4 @@ textarea {
 .prototype-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin-top: 1.5rem; }
 .prototype-screen { border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; background: white; min-height: 18rem; }
 .prototype-element { border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.65rem; margin-top: 0.65rem; color: var(--muted); }
+.design-governance,.review-actions{display:flex;align-items:center;justify-content:space-between;gap:1rem}.review-actions{justify-content:flex-end}.history-list{display:grid;gap:.75rem}.history-list article{display:flex;justify-content:space-between;gap:1rem;padding:.85rem 0;border-bottom:1px solid var(--line)}

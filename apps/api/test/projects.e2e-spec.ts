@@ -91,6 +91,7 @@ describe('Workspace and Project persistence', () => {
     vi.stubEnv('DEV_AUTH_ENABLED', 'true');
     vi.stubEnv('DEV_AUTH_TOKEN', token);
     vi.stubEnv('DEV_USER_ID', userId);
+    vi.stubEnv('DESIGN_AUTOMATION_ENABLED', 'false');
     app = await boot();
     const prisma = app.get(DatabaseService).db;
     await prisma.user.createMany({

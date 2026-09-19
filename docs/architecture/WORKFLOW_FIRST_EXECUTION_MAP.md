@@ -123,6 +123,15 @@ BPMN swimlanes, and prototype screens. Sprint 18 validates the value with a
 deterministic structured generator before adding persistence, model calls, or
 background automation. See `docs/specs/SPEC-009-DESIGN-STUDIO-PREVIEW.md`.
 
+### SPEC-010–012 — Govern and Automate Design Proposals
+
+Trigger: a BA persists a design draft, reviews it, or changes its requirement.
+
+Result: Design Studio retains immutable proposal history, optionally uses the
+structured model gateway, and creates a new reviewable proposal when its input
+version changes. Human acceptance remains mandatory. See SPEC-010, SPEC-011,
+and SPEC-012.
+
 ## Runtime for v0.1
 
 ```text

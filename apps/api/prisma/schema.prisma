@@ -29,6 +29,8 @@ model User {
   decisionVersions      DecisionVersion[]
   sourceAnalyses        SourceAnalysis[]
   sourceAnalysesReviewed SourceAnalysis[]       @relation("SourceAnalysisReviewer")
+  designArtifactsCreated DesignArtifact[]       @relation("DesignArtifactCreator")
+  designArtifactsReviewed DesignArtifact[]      @relation("DesignArtifactReviewer")
 }
 
 model Workspace {
@@ -67,6 +69,7 @@ model Project {
   businessRules  BusinessRule[]
   decisions      Decision[]
   sourceAnalyses SourceAnalysis[]
+  designArtifacts DesignArtifact[]
 
   @@unique([workspaceId, id])
 }
@@ -127,9 +130,49 @@ model Requirement {
   businessRuleLinks  BusinessRuleRequirement[]
   decisionLinks      DecisionRequirement[]
   acceptedFromAnalysis SourceAnalysis?          @relation("AcceptedSourceProposal")
+  designArtifacts      DesignArtifact[]
 
   @@unique([projectId, id])
   @@index([workspaceId, projectId, createdAt, id])
+}
+
+enum DesignArtifactStatus {
+  PENDING_REVIEW
+  ACCEPTED
+  REJECTED
+  STALE
+  FAILED
+}
+
+enum DesignGenerationTrigger {
+  MANUAL
+  REQUIREMENT_CHANGED
+}
+
+model DesignArtifact {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  workspaceId        String                  @db.Uuid
+  projectId          String                  @db.Uuid
+  project            Project                 @relation(fields: [workspaceId, projectId], references: [workspaceId, id], onDelete: Restrict)
+  requirementId      String                  @db.Uuid
+  requirement        Requirement             @relation(fields: [projectId, requirementId], references: [projectId, id], onDelete: Restrict)
+  requirementVersion Int
+  artifactVersion    Int
+  revision           Int                     @default(1)
+  status             DesignArtifactStatus    @default(PENDING_REVIEW)
+  trigger            DesignGenerationTrigger
+  generatorProfile   String                  @db.VarChar(80)
+  result             Json?
+  errorMessage       String?                 @db.VarChar(500)
+  createdBy          String                  @db.Uuid
+  creator            User                    @relation("DesignArtifactCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  reviewedBy         String?                 @db.Uuid
+  reviewer           User?                   @relation("DesignArtifactReviewer", fields: [reviewedBy], references: [id], onDelete: Restrict)
+  createdAt          DateTime                @default(now())
+  reviewedAt         DateTime?
+
+  @@unique([requirementId, artifactVersion])
+  @@index([workspaceId, projectId, requirementId, createdAt])
 }
 
 model RequirementVersion {

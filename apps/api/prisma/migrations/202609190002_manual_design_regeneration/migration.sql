@@ -1,0 +1,1 @@
+DROP INDEX "DesignArtifact_requirementId_requirementVersion_generatorProfile_key";
