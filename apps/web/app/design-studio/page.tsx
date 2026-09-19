@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { designArtifactSchema, designPreviewSchema, entityIdSchema, projectDtoSchema, requirementDtoSchema } from "@ba/contracts";
+import { redirect } from "next/navigation";
+import { designArtifactSchema, designPreviewSchema, entityIdSchema, projectDtoSchema, requirementDtoSchema, workspaceDtoSchema } from "@ba/contracts";
 import { apiRequest, ApiError } from "@/lib/api";
 import { ProjectShell } from "../project-shell";
 import { acceptDesign, generateDesign, rejectDesign } from "./actions";
@@ -7,6 +8,18 @@ export const dynamic = "force-dynamic";
 
 export default async function DesignStudio({ searchParams }: { searchParams: Promise<{ workspace?: string; project?: string; requirement?: string; generated?: string; reviewed?: string }> }) {
   const query = await searchParams; const workspace = entityIdSchema.safeParse(query.workspace); const project = entityIdSchema.safeParse(query.project); const selectedId = query.requirement ? entityIdSchema.safeParse(query.requirement) : undefined;
+  if (!query.workspace || !query.project) {
+    let destination = "/";
+    try {
+      const workspaces = await apiRequest("/workspaces", workspaceDtoSchema.array());
+      const selectedWorkspace = query.workspace && entityIdSchema.safeParse(query.workspace).success ? workspaces.find((item) => item.id === query.workspace) : workspaces[0];
+      if (selectedWorkspace) {
+        const projects = await apiRequest(`/workspaces/${selectedWorkspace.id}/projects`, projectDtoSchema.array());
+        destination = projects[0] ? `/design-studio?workspace=${selectedWorkspace.id}&project=${projects[0].id}` : `/?workspace=${selectedWorkspace.id}`;
+      }
+    } catch { destination = "/"; }
+    redirect(destination);
+  }
   if (!workspace.success || !project.success || (selectedId && !selectedId.success)) return <main><h1>Đường dẫn chưa hợp lệ.</h1><Link href="/">Về workspace</Link></main>;
   const apiBase = `/workspaces/${workspace.data}/projects/${project.data}`;
   let data;
