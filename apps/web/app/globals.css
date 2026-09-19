@@ -846,3 +846,17 @@ textarea {
     line-height: 1.8;
   }
 }
+.design-picker { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+.flow-canvas { display: grid; justify-items: center; gap: 0.35rem; margin-top: 1.5rem; }
+.flow-step { min-width: min(34rem, 90%); display: grid; gap: 0.35rem; text-align: center; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 0.8rem; background: white; }
+.flow-step > span { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.12em; }
+.flow-step > b { position: absolute; margin-top: 3.85rem; justify-self: center; color: var(--green); }
+.bpmn-board { border: 1px solid var(--line); margin-top: 1.5rem; overflow: hidden; }
+.bpmn-lane { display: grid; grid-template-columns: 10rem 1fr; border-bottom: 1px solid var(--line); min-height: 7rem; }
+.bpmn-lane:last-child { border-bottom: 0; }
+.bpmn-lane > strong { padding: 1rem; background: var(--soft); border-right: 1px solid var(--line); }
+.bpmn-lane > div { display: flex; align-items: center; gap: 1rem; padding: 1rem; overflow-x: auto; }
+.bpmn-lane span { min-width: 10rem; padding: 0.75rem; border: 1px solid var(--green); border-radius: 2rem; text-align: center; background: white; }
+.prototype-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+.prototype-screen { border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; background: white; min-height: 18rem; }
+.prototype-element { border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.65rem; margin-top: 0.65rem; color: var(--muted); }

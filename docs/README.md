@@ -32,8 +32,8 @@ Raw source → analysis → proposal review → DRAFT requirement
            → clarification → readiness → human approval → traceable output
 ```
 
-Sprints 01–17 are recorded in `sprints/`. The latest delivered capabilities are
-the project Findings Register, Traceability View, and Readiness Portfolio.
+Sprints 01–18 are recorded in `sprints/`. The latest delivered capability is
+Design Studio Preview for Flow, BPMN, and Prototype proposals.
 
 ## Document rules
 

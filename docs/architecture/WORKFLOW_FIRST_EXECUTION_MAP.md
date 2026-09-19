@@ -114,6 +114,15 @@ Result: SPEC-005 rules are applied consistently to all requirements, with totals
 and missing checks that lead back to governed requirement detail. The assessment
 does not change lifecycle state. See `docs/specs/SPEC-008-READINESS-PORTFOLIO.md`.
 
+### SPEC-009 — Preview Flow, BPMN, and Prototype
+
+Trigger: the BA selects a saved requirement in Design Studio.
+
+Result: the system produces three version-linked PROPOSAL views: process flow,
+BPMN swimlanes, and prototype screens. Sprint 18 validates the value with a
+deterministic structured generator before adding persistence, model calls, or
+background automation. See `docs/specs/SPEC-009-DESIGN-STUDIO-PREVIEW.md`.
+
 ## Runtime for v0.1
 
 ```text

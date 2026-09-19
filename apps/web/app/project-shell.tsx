@@ -14,7 +14,8 @@ type Section =
   | "decisions"
   | "findings"
   | "traceability"
-  | "readiness";
+  | "readiness"
+  | "design-studio";
 
 const sections: { id: Section; label: string; symbol: string }[] = [
   { id: "requirements", label: "Yêu cầu nghiệp vụ", symbol: "▤" },
@@ -25,6 +26,7 @@ const sections: { id: Section; label: string; symbol: string }[] = [
   { id: "findings", label: "Phát hiện phân tích", symbol: "!" },
   { id: "traceability", label: "Truy vết", symbol: "↗" },
   { id: "readiness", label: "Sẵn sàng dự án", symbol: "◉" },
+  { id: "design-studio", label: "Design Studio", symbol: "✦" },
 ];
 
 export type BreadcrumbItem = { label: string; href?: string };

@@ -3,6 +3,7 @@ import type { App } from 'supertest/types.js';
 import request from 'supertest';
 import {
   findingRegisterItemSchema,
+  designPreviewSchema,
   readinessPortfolioSchema,
   traceabilityItemSchema,
 } from '@ba/contracts';
@@ -39,6 +40,19 @@ export function projectInsightChecks(context: () => {
       const portfolio = readinessPortfolioSchema.parse(response.body);
       expect(portfolio.total).toBe(portfolio.items.length);
       expect(portfolio.ready + portfolio.conditional + portfolio.notReady).toBe(portfolio.total);
+    });
+
+    it('generates governed flow, BPMN, and prototype proposals from a requirement', async () => {
+      const portfolioResponse = await api().get(`${base()}/readiness-portfolio`).set('Authorization', auth()).expect(200);
+      const portfolio = readinessPortfolioSchema.parse(portfolioResponse.body);
+      const requirement = portfolio.items[0];
+      expect(requirement).toBeDefined();
+      const response = await api().get(`${base()}/requirements/${requirement.requirementId}/design-preview`).set('Authorization', auth()).expect(200);
+      const preview = designPreviewSchema.parse(response.body);
+      expect(preview).toMatchObject({ classification: 'PROPOSAL', requirementVersion: requirement.version });
+      expect(preview.flow.nodes.length).toBeGreaterThanOrEqual(2);
+      expect(preview.bpmn.lanes.length).toBeGreaterThanOrEqual(1);
+      expect(preview.prototype.screens.length).toBeGreaterThanOrEqual(1);
     });
 
     it.each(['findings', 'traceability', 'readiness-portfolio'])('hides %s from a foreign project scope', async (path) => {

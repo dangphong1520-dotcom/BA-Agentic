@@ -11,6 +11,7 @@ import { SourceAnalysisModule } from './source-analyses/source-analysis.module.j
 import { FindingModule } from './findings/finding.module.js';
 import { TraceabilityModule } from './traceability/traceability.module.js';
 import { PortfolioModule } from './portfolio/portfolio.module.js';
+import { DesignStudioModule } from './design-studio/design-studio.module.js';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PortfolioModule } from './portfolio/portfolio.module.js';
     FindingModule,
     TraceabilityModule,
     PortfolioModule,
+    DesignStudioModule,
   ],
   controllers: [AppController],
   providers: [AppService],
