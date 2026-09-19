@@ -149,6 +149,14 @@ Result: the system assembles a traceable PROPOSAL from stored project knowledge,
 marks missing content explicitly, and provides a Markdown download. See
 `docs/specs/SPEC-014-DOCUMENT-GENERATOR.md`.
 
+### SPEC-015 — Exercise an Interactive Prototype
+
+Trigger: a BA opens a generated design proposal and selects a screen or viewport.
+
+Result: Design Studio renders a safe, data-free interactive preview for walking
+through the proposed user journey before review. See
+`docs/specs/SPEC-015-INTERACTIVE-PROTOTYPE.md`.
+
 ## Runtime for v0.1
 
 ```text

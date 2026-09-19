@@ -4,6 +4,7 @@ import { designArtifactSchema, designPreviewSchema, entityIdSchema, projectDtoSc
 import { apiRequest, ApiError } from "@/lib/api";
 import { ProjectShell } from "../project-shell";
 import { acceptDesign, generateDesign, rejectDesign } from "./actions";
+import { PrototypePlayer } from "./prototype-player";
 export const dynamic = "force-dynamic";
 
 export default async function DesignStudio({ searchParams }: { searchParams: Promise<{ workspace?: string; project?: string; requirement?: string; generated?: string; reviewed?: string }> }) {
@@ -41,6 +42,7 @@ export default async function DesignStudio({ searchParams }: { searchParams: Pro
       <section className="panel"><span className="eyebrow">FLOW DRAFT</span><h2>{preview.flow.title}</h2><div className="flow-canvas">{preview.flow.nodes.map((node, index) => <div className="flow-step" key={node.id}><span>{node.kind}</span><strong>{node.label}</strong>{index < preview.flow.nodes.length - 1 && <b aria-hidden="true">↓</b>}</div>)}</div></section>
       <section className="panel"><span className="eyebrow">BPMN DRAFT</span><h2>{preview.bpmn.title}</h2><div className="bpmn-board">{preview.bpmn.lanes.map((lane) => <div className="bpmn-lane" key={lane.name}><strong>{lane.name}</strong><div>{lane.activities.map((activity, index) => <span key={`${activity}-${index}`}>{activity}</span>)}</div></div>)}</div></section>
       <section className="panel"><span className="eyebrow">PROTOTYPE DRAFT</span><h2>{preview.prototype.title}</h2><div className="prototype-grid">{preview.prototype.screens.map((screen) => <article className="prototype-screen" key={screen.name}><span className="eyebrow">SCREEN</span><h3>{screen.name}</h3><p>{screen.purpose}</p>{screen.elements.map((element, index) => <div className="prototype-element" key={`${element}-${index}`}>{element}</div>)}</article>)}</div></section>
+      <PrototypePlayer screens={preview.prototype.screens}/>
       {!!artifacts.length && <section className="panel"><h2>Lịch sử thiết kế</h2><div className="history-list">{artifacts.map((item) => <article key={item.id}><strong>Design V{item.artifactVersion}</strong><span>{item.status} · Requirement V{item.requirementVersion} · {item.generatorProfile}</span></article>)}</div></section>}
     </>}
   </ProjectShell>;

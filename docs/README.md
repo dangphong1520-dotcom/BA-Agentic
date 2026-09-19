@@ -32,11 +32,12 @@ Raw source → analysis → proposal review → DRAFT requirement
            → clarification → readiness → human approval → traceable output
 ```
 
-Sprints 01–23 are recorded in `sprints/`. Design Studio now persists and reviews
+Sprints 01–24 are recorded in `sprints/`. Design Studio now persists and reviews
 versioned proposals, supports an optional structured AI gateway, regenerates
 stale design after requirement changes, and accepts natural-language design
-refinements. Automatic Documents produces traceable BRD, PRD, and SRS proposals
-from current project knowledge.
+refinements. It also renders an interactive desktop/mobile prototype preview.
+Automatic Documents produces traceable BRD, PRD, and SRS proposals from current
+project knowledge.
 
 ## Document rules
 
