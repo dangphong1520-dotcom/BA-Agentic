@@ -132,6 +132,23 @@ structured model gateway, and creates a new reviewable proposal when its input
 version changes. Human acceptance remains mandatory. See SPEC-010, SPEC-011,
 and SPEC-012.
 
+### SPEC-013 — Refine Design from a Prompt
+
+Trigger: a BA describes the desired interface or workflow change for a selected
+requirement.
+
+Result: Design Studio creates a new governed Flow, BPMN, and prototype proposal,
+retaining both the prompt and requirement version for review. See
+`docs/specs/SPEC-013-PROMPT-TO-PROTOTYPE.md`.
+
+### SPEC-014 — Generate Structured Project Documents
+
+Trigger: a BA selects BRD, PRD, or SRS for the current project.
+
+Result: the system assembles a traceable PROPOSAL from stored project knowledge,
+marks missing content explicitly, and provides a Markdown download. See
+`docs/specs/SPEC-014-DOCUMENT-GENERATOR.md`.
+
 ## Runtime for v0.1
 
 ```text

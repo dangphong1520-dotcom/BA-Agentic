@@ -6,6 +6,7 @@ export * from "./findings.js";
 export * from "./traceability.js";
 export * from "./portfolio.js";
 export * from "./design-studio.js";
+export * from "./documents.js";
 export * from "./questions.js";
 export * from "./business-rules.js";
 export * from "./decisions.js";

@@ -861,3 +861,5 @@ textarea {
 .prototype-screen { border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; background: white; min-height: 18rem; }
 .prototype-element { border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.65rem; margin-top: 0.65rem; color: var(--muted); }
 .design-governance,.review-actions{display:flex;align-items:center;justify-content:space-between;gap:1rem}.review-actions{justify-content:flex-end}.history-list{display:grid;gap:.75rem}.history-list article{display:flex;justify-content:space-between;gap:1rem;padding:.85rem 0;border-bottom:1px solid var(--line)}
+.design-prompt textarea{width:100%;min-height:8rem;margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:.8rem;font:inherit;resize:vertical}.design-prompt>div{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.document-preview{max-width:60rem;margin-inline:auto}.document-cover{padding:2rem 0;border-bottom:2px solid var(--green);margin-bottom:1.5rem}.document-preview article{padding:1rem 0;border-bottom:1px solid var(--line)}.document-preview pre{white-space:pre-wrap;font:inherit;line-height:1.7;color:var(--muted)}

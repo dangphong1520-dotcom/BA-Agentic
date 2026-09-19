@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, Inject, Param, Post, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
-import { designReviewSchema, entityIdSchema } from '@ba/contracts';
+import { designGenerateSchema, designReviewSchema, entityIdSchema } from '@ba/contracts';
 import { DevelopmentAuthGuard } from '../auth/development-auth.guard.js';
 import { DesignStudioService } from './design-studio.service.js';
 const id = (value: string) => { const parsed = entityIdSchema.safeParse(value); if (!parsed.success) throw new BadRequestException('Invalid identifier'); return parsed.data; };
@@ -11,7 +11,7 @@ export class DesignStudioController {
   private args(res: Response<unknown, { userId: string }>, p: { workspaceId: string; projectId: string; id: string }) { return [res.locals.userId, id(p.workspaceId), id(p.projectId), id(p.id)] as const; }
   @Get('preview') preview(@Res({ passthrough: true }) res: Response<unknown, { userId: string }>, @Param() p: { workspaceId: string; projectId: string; id: string }) { return this.service.preview(...this.args(res, p)); }
   @Get('artifacts') list(@Res({ passthrough: true }) res: Response<unknown, { userId: string }>, @Param() p: { workspaceId: string; projectId: string; id: string }) { return this.service.list(...this.args(res, p)); }
-  @Post('artifacts') create(@Res({ passthrough: true }) res: Response<unknown, { userId: string }>, @Param() p: { workspaceId: string; projectId: string; id: string }) { return this.service.create(...this.args(res, p)); }
+  @Post('artifacts') create(@Res({ passthrough: true }) res: Response<unknown, { userId: string }>, @Param() p: { workspaceId: string; projectId: string; id: string }, @Body() body: unknown) { const parsed = designGenerateSchema.safeParse(body); if (!parsed.success) throw new BadRequestException('Invalid design instruction'); return this.service.create(...this.args(res, p), parsed.data.instruction); }
   @Post('artifacts/:artifactId/accept') accept(@Res({ passthrough: true }) res: Response<unknown, { userId: string }>, @Param() p: { workspaceId: string; projectId: string; id: string; artifactId: string }, @Body() body: unknown) { return this.service.accept(res.locals.userId, id(p.workspaceId), id(p.projectId), id(p.id), id(p.artifactId), review(body)); }
   @Post('artifacts/:artifactId/reject') reject(@Res({ passthrough: true }) res: Response<unknown, { userId: string }>, @Param() p: { workspaceId: string; projectId: string; id: string; artifactId: string }, @Body() body: unknown) { return this.service.reject(res.locals.userId, id(p.workspaceId), id(p.projectId), id(p.id), id(p.artifactId), review(body)); }
 }

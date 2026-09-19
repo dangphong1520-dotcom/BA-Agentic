@@ -1,0 +1,1 @@
+ALTER TABLE "DesignArtifact" ADD COLUMN "instruction" VARCHAR(2000) NOT NULL DEFAULT '';

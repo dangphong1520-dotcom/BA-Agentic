@@ -162,6 +162,7 @@ model DesignArtifact {
   status             DesignArtifactStatus    @default(PENDING_REVIEW)
   trigger            DesignGenerationTrigger
   generatorProfile   String                  @db.VarChar(80)
+  instruction        String                  @default("") @db.VarChar(2000)
   result             Json?
   errorMessage       String?                 @db.VarChar(500)
   createdBy          String                  @db.Uuid

@@ -14,15 +14,15 @@ export class DesignStudioService implements OnApplicationBootstrap, OnApplicatio
     return designArtifactSchema.parse({ ...content, id: row.id, requirementId: row.requirementId, requirementVersion: row.requirementVersion,
       artifactVersion: row.artifactVersion, revision: row.revision, status: row.status, trigger: row.trigger,
       generatorProfile: row.generatorProfile, classification: 'PROPOSAL', generatedAt: row.createdAt.toISOString(),
-      reviewedAt: row.reviewedAt?.toISOString() ?? null, errorMessage: row.errorMessage });
+      instruction: row.instruction, reviewedAt: row.reviewedAt?.toISOString() ?? null, errorMessage: row.errorMessage });
   }
   async preview(user: string, workspace: string, project: string, id: string): Promise<DesignPreview> {
     const requirement = await this.requirements.get(user, workspace, project, id); const generated = await this.gateway.generate(requirement);
     return designPreviewSchema.parse({ ...generated.content, requirementId: requirement.id, requirementVersion: requirement.version, generatorProfile: generated.profile, classification: 'PROPOSAL', generatedAt: new Date().toISOString() });
   }
-  async create(user: string, workspace: string, project: string, id: string, trigger: 'MANUAL' | 'REQUIREMENT_CHANGED' = 'MANUAL') {
-    const requirement = await this.requirements.get(user, workspace, project, id); const generated = await this.gateway.generate(requirement);
-    return this.dto(await this.repository.create(user, workspace, project, id, requirement.version, trigger, generated.profile, generated.content));
+  async create(user: string, workspace: string, project: string, id: string, instruction = '', trigger: 'MANUAL' | 'REQUIREMENT_CHANGED' = 'MANUAL') {
+    const requirement = await this.requirements.get(user, workspace, project, id); const generated = await this.gateway.generate(requirement, instruction);
+    return this.dto(await this.repository.create(user, workspace, project, id, requirement.version, trigger, generated.profile, generated.content, instruction));
   }
   async list(user: string, workspace: string, project: string, id: string) {
     await this.requirements.get(user, workspace, project, id);

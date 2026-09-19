@@ -11,7 +11,7 @@ export class DesignStudioRepository {
   get(userId: string, workspaceId: string, projectId: string, id: string) {
     return this.database.db.designArtifact.findFirst({ where: { id, workspaceId, projectId, project: { members: { some: { userId } } } } });
   }
-  async create(userId: string, workspaceId: string, projectId: string, requirementId: string, requirementVersion: number, trigger: 'MANUAL' | 'REQUIREMENT_CHANGED', generatorProfile: string, result: DesignContent) {
+  async create(userId: string, workspaceId: string, projectId: string, requirementId: string, requirementVersion: number, trigger: 'MANUAL' | 'REQUIREMENT_CHANGED', generatorProfile: string, result: DesignContent, instruction = '') {
     return this.database.db.$transaction(async (tx) => {
       if (trigger === 'REQUIREMENT_CHANGED') {
         const existing = await tx.designArtifact.findFirst({ where: { requirementId, requirementVersion, generatorProfile, trigger } });
@@ -19,7 +19,7 @@ export class DesignStudioRepository {
       }
       await tx.designArtifact.updateMany({ where: { requirementId, status: 'PENDING_REVIEW', requirementVersion: { lt: requirementVersion } }, data: { status: 'STALE', revision: { increment: 1 } } });
       const latest = await tx.designArtifact.aggregate({ where: { requirementId }, _max: { artifactVersion: true } });
-      return tx.designArtifact.create({ data: { workspaceId, projectId, requirementId, requirementVersion, artifactVersion: (latest._max.artifactVersion ?? 0) + 1, trigger, generatorProfile, result, createdBy: userId } });
+      return tx.designArtifact.create({ data: { workspaceId, projectId, requirementId, requirementVersion, artifactVersion: (latest._max.artifactVersion ?? 0) + 1, trigger, generatorProfile, result, instruction, createdBy: userId } });
     });
   }
   review(userId: string, workspaceId: string, projectId: string, requirementId: string, id: string, expectedRevision: number, status: 'ACCEPTED' | 'REJECTED') {

@@ -28,9 +28,10 @@ export const designGenerationTriggerSchema = z.enum(["MANUAL", "REQUIREMENT_CHAN
 export const designArtifactSchema = designPreviewSchema.extend({
   id: z.uuid(), artifactVersion: z.number().int().positive(), revision: z.number().int().positive(),
   status: designArtifactStatusSchema, trigger: designGenerationTriggerSchema,
-  reviewedAt: z.iso.datetime().nullable(), errorMessage: z.string().nullable(),
+  instruction: z.string(), reviewedAt: z.iso.datetime().nullable(), errorMessage: z.string().nullable(),
 });
 export const designReviewSchema = z.object({ expectedRevision: z.number().int().positive() });
+export const designGenerateSchema = z.object({ instruction: z.string().trim().max(2000).default("") });
 export type DesignContent = z.infer<typeof designContentSchema>;
 export type DesignPreview = z.infer<typeof designPreviewSchema>;
 export type DesignArtifact = z.infer<typeof designArtifactSchema>;

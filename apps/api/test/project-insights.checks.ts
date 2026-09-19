@@ -6,6 +6,7 @@ import {
   designArtifactSchema,
   designPreviewSchema,
   requirementDtoSchema,
+  documentPreviewSchema,
   readinessPortfolioSchema,
   traceabilityItemSchema,
 } from '@ba/contracts';
@@ -61,13 +62,22 @@ export function projectInsightChecks(context: () => {
     it('versions and human-reviews a persisted design proposal', async () => {
       const portfolio = readinessPortfolioSchema.parse((await api().get(`${base()}/readiness-portfolio`).set('Authorization', auth()).expect(200)).body);
       const requirement = portfolio.items[0];
-      const created = designArtifactSchema.parse((await api().post(`${base()}/requirements/${requirement.requirementId}/design/artifacts`).set('Authorization', auth()).send({}).expect(201)).body);
+      const created = designArtifactSchema.parse((await api().post(`${base()}/requirements/${requirement.requirementId}/design/artifacts`).set('Authorization', auth()).send({ instruction: 'Ưu tiên dashboard cho BA' }).expect(201)).body);
       expect(created).toMatchObject({ status: 'PENDING_REVIEW', artifactVersion: 1, trigger: 'MANUAL' });
+      expect(created.instruction).toBe('Ưu tiên dashboard cho BA');
       const accepted = designArtifactSchema.parse((await api().post(`${base()}/requirements/${requirement.requirementId}/design/artifacts/${created.id}/accept`).set('Authorization', auth()).send({ expectedRevision: created.revision }).expect(201)).body);
       expect(accepted.status).toBe('ACCEPTED');
       await api().post(`${base()}/requirements/${requirement.requirementId}/design/artifacts/${created.id}/reject`).set('Authorization', auth()).send({ expectedRevision: accepted.revision }).expect(409);
       const list = designArtifactSchema.array().parse((await api().get(`${base()}/requirements/${requirement.requirementId}/design/artifacts`).set('Authorization', auth()).expect(200)).body);
       expect(list[0].status).toBe('ACCEPTED');
+    });
+
+    it.each(['BRD', 'PRD', 'SRS'] as const)('generates a traceable %s document proposal', async (format) => {
+      const response = await api().get(`${base()}/documents/${format}/preview`).set('Authorization', auth()).expect(200);
+      const document = documentPreviewSchema.parse(response.body);
+      expect(document).toMatchObject({ format, classification: 'PROPOSAL' });
+      expect(document.sections.length).toBeGreaterThanOrEqual(4);
+      expect(document.requirementVersions.length).toBeGreaterThan(0);
     });
 
     it('regenerates design and expires a pending proposal after requirement changes', async () => {

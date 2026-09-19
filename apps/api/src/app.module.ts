@@ -12,6 +12,7 @@ import { FindingModule } from './findings/finding.module.js';
 import { TraceabilityModule } from './traceability/traceability.module.js';
 import { PortfolioModule } from './portfolio/portfolio.module.js';
 import { DesignStudioModule } from './design-studio/design-studio.module.js';
+import { DocumentModule } from './documents/document.module.js';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { DesignStudioModule } from './design-studio/design-studio.module.js';
     TraceabilityModule,
     PortfolioModule,
     DesignStudioModule,
+    DocumentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

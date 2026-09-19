@@ -3,7 +3,7 @@ import { designContentSchema, type DesignContent, type RequirementDto } from '@b
 
 @Injectable()
 export class DesignStudioGateway {
-  private local(requirement: RequirementDto): DesignContent {
+  private local(requirement: RequirementDto, instruction = ''): DesignContent {
     const actions = requirement.mainFlow.split(/\r?\n|\s*->\s*/).map((value) => value.replace(/^\s*\d+[.)-]?\s*/, '').trim()).filter(Boolean);
     const mainActions = actions.length ? actions : [requirement.description || requirement.title];
     const exception = requirement.exceptionFlow.trim();
@@ -24,11 +24,12 @@ export class DesignStudioGateway {
         { name: 'Màn hình bắt đầu', purpose: `Giúp ${actor} khởi tạo tác vụ`, elements: ['Tiêu đề nghiệp vụ', 'Thông tin đầu vào', 'Nút tiếp tục'] },
         { name: 'Màn hình xử lý', purpose: mainActions[0], elements: mainActions.slice(0, 4) },
         { name: 'Màn hình kết quả', purpose: requirement.acceptanceCriteria.trim() || 'Xác nhận kết quả', elements: ['Trạng thái', 'Tóm tắt kết quả', 'Hành động tiếp theo'] },
+        ...(instruction ? [{ name: 'Tinh chỉnh từ prompt', purpose: instruction, elements: ['Nội dung đề xuất', 'Trạng thái review', 'Tiếp tục tinh chỉnh'] }] : []),
       ] },
     });
   }
 
-  private async openai(requirement: RequirementDto, apiKey: string) {
+  private async openai(requirement: RequirementDto, apiKey: string, instruction = '') {
     const model = process.env.OPENAI_DESIGN_MODEL ?? 'gpt-5.6-luna';
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -36,7 +37,7 @@ export class DesignStudioGateway {
       body: JSON.stringify({
         model, store: false,
         instructions: 'You are a senior Business Analyst and UX designer. Produce conservative design proposals only from the supplied requirement. Do not invent confirmed facts. Use Vietnamese.',
-        input: JSON.stringify(requirement),
+        input: JSON.stringify({ requirement, refinementInstruction: instruction }),
         text: { format: { type: 'json_schema', name: 'ba_design', strict: true, schema: {
           type: 'object', additionalProperties: false, required: ['flow', 'bpmn', 'prototype'], properties: {
             flow: { type: 'object', additionalProperties: false, required: ['title', 'nodes'], properties: { title: { type: 'string' }, nodes: { type: 'array', minItems: 2, items: { type: 'object', additionalProperties: false, required: ['id', 'label', 'kind'], properties: { id: { type: 'string' }, label: { type: 'string' }, kind: { type: 'string', enum: ['START', 'ACTION', 'DECISION', 'END'] } } } } } },
@@ -53,12 +54,12 @@ export class DesignStudioGateway {
     return { content: designContentSchema.parse(JSON.parse(text)), profile: `OPENAI_RESPONSES_${model}` };
   }
 
-  async generate(requirement: RequirementDto) {
+  async generate(requirement: RequirementDto, instruction = '') {
     const apiKey = process.env.OPENAI_API_KEY;
     if (apiKey) {
-      try { return await this.openai(requirement, apiKey); }
-      catch { return { content: this.local(requirement), profile: 'OPENAI_FAILED_LOCAL_FALLBACK_V1' }; }
+      try { return await this.openai(requirement, apiKey, instruction); }
+      catch { return { content: this.local(requirement, instruction), profile: 'OPENAI_FAILED_LOCAL_FALLBACK_V1' }; }
     }
-    return { content: this.local(requirement), profile: 'LOCAL_DETERMINISTIC_V1' };
+    return { content: this.local(requirement, instruction), profile: 'LOCAL_DETERMINISTIC_V1' };
   }
 }
